@@ -1,0 +1,413 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06281a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png">
+<title>Nexora Driver</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--g:#22e07a;--g2:#0fb85c;--d:#06281a;--bg:#f4f8f5;--t:#10281d;--m:#6b7f74;--r:18px;--y:#ffc233;--red:#e0483a}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--t);min-height:100dvh}
+.scr{display:none;min-height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.scr.on{display:block;animation:in .3s}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+.logo{font-weight:900;letter-spacing:.14em;background:linear-gradient(90deg,#22e07a,#b6ff3c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{background:radial-gradient(circle at 70% 15%,#0d5a37,var(--d) 65%);color:#fff;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;padding:32px 24px;position:relative;overflow:hidden}
+.hero .logo{font-size:44px;text-align:center;margin-top:30px}.hero .tag{text-align:center;color:var(--y);font-weight:800;letter-spacing:.3em;font-size:13px;margin-top:6px}
+.fl{position:absolute;font-size:34px;opacity:.9;animation:fl 6s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-16px) rotate(8deg)}}
+.slide{text-align:center;min-height:130px}.slide h2{font-size:26px;margin-bottom:8px}.slide p{color:#b8d9c6;line-height:1.4}
+.dots{display:flex;gap:6px;justify-content:center;margin:12px 0}.dots i{width:8px;height:8px;border-radius:9px;background:#ffffff40}.dots i.on{width:24px;background:var(--g)}
+.btn{display:block;width:100%;border:0;border-radius:var(--r);padding:16px;font-size:16px;font-weight:700;background:linear-gradient(90deg,var(--g),var(--g2));color:#042415;margin-top:10px;cursor:pointer;text-align:center;text-decoration:none}
+.btn.o{background:transparent;color:#fff;border:2px solid #ffffff55}.btn.l{background:#fff;color:var(--t);border:2px solid #dbe7df}.btn.red{background:#fff;color:var(--red);border:2px solid #f2c4bf}.btn:disabled{opacity:.5}.btn.s{padding:11px;font-size:14px}
+.demo{background:var(--y);color:#3a2e00}
+.pad{padding:20px}h1{font-size:26px;margin-bottom:6px}.sub{color:var(--m);margin-bottom:16px;line-height:1.4}
+input,select{width:100%;padding:15px;border:2px solid #dbe7df;border-radius:14px;font-size:16px;margin:6px 0;background:#fff;color:var(--t)}input:focus,select:focus{outline:0;border-color:var(--g2)}
+.tabs{display:flex;background:#e3eee7;border-radius:14px;padding:4px;margin:14px 0}.tabs b{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:14px;cursor:pointer;color:var(--m)}.tabs b.on{background:#fff;color:var(--t);box-shadow:0 2px 8px #0001}
+.card{background:#fff;border-radius:var(--r);padding:14px;margin:10px 0;box-shadow:0 2px 12px #0a3a2214;display:flex;gap:12px;align-items:center}.card.c{cursor:pointer}.card.blk{display:block}
+.im{width:56px;height:56px;border-radius:14px;background:#e8f7ee;display:grid;place-items:center;font-size:28px;flex:none;overflow:hidden}.im img{width:100%;height:100%;object-fit:cover}
+.card h3{font-size:16px}.card p{font-size:13px;color:var(--m);margin-top:2px}
+.top{position:sticky;top:0;background:var(--bg);padding:14px 20px;display:flex;align-items:center;gap:10px;z-index:5}.top h2{flex:1;font-size:18px}
+.ic{border:0;background:#fff;width:40px;height:40px;border-radius:12px;font-size:18px;box-shadow:0 2px 8px #0001;cursor:pointer}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0}.tot{font-size:19px;font-weight:800;border-top:2px dashed #cfe0d5;margin-top:6px;padding-top:12px}
+.note{background:#fff8d6;border-radius:14px;padding:12px;font-size:13px;margin:12px 0;line-height:1.4}.note.bad{background:#fde6e3;color:#8a2218}.note.ok{background:#e4f8ec;color:#0b5a30}
+.err{color:var(--red);font-size:14px;min-height:20px}
+#nav{position:fixed;left:0;right:0;bottom:0;display:none;background:#fff;border-top:1px solid #dbe7df;padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:900}
+#nav button{flex:1;border:0;background:none;font-size:11px;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative}#nav button span{font-size:22px}#nav button.on{color:var(--g2);font-weight:700}
+#nav button em{position:absolute;top:-2px;right:22%;background:var(--red);color:#fff;font-style:normal;font-size:10px;border-radius:9px;padding:1px 6px}
+.tb{padding-bottom:96px}
+.pill{display:inline-block;background:#e8f7ee;color:var(--g2);font-weight:700;border-radius:20px;padding:4px 12px;font-size:13px}.pill.y{background:#fff1c9;color:#8a6200}.pill.r{background:#fde6e3;color:var(--red)}
+.sw{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(120deg,var(--d),#0d6b40);color:#fff;border-radius:var(--r);padding:16px 18px;margin:0 0 12px}
+.sw b{font-size:17px}.sw small{display:block;color:#b8d9c6;margin-top:2px}
+.tg{width:58px;height:32px;border-radius:20px;background:#ffffff33;position:relative;border:0;cursor:pointer;transition:.2s}.tg::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.2s}.tg.on{background:var(--g)}.tg.on::after{left:29px}
+.rq{display:block;cursor:pointer}.rq .a{display:flex;justify-content:space-between;align-items:center;gap:8px}.rq h3{font-size:17px}
+.rt{display:flex;align-items:center;gap:8px;margin:8px 0}.rt>div{flex:1;min-width:0}.rt small{display:block;font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.03em}.rt b{display:block;font-size:15px;color:var(--t)}.rt>span{font-size:20px;color:var(--g2)}.rt .to{text-align:right}.big .rt small{color:#b8d9c6}.big .rt b{color:#fff}
+.rq .gl{text-align:right}.rq .gl small{display:block;font-size:11px;font-weight:700;color:var(--m)}
+.pay1{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px dashed #dbe7df}.pay1 span{font-size:14px}.pay1 b{font-size:22px}.pay1:last-of-type{border:0}.pay1.cl b{color:var(--g2)}.rq .g{font-size:22px;font-weight:900;color:var(--g2);white-space:nowrap}.rq .m{display:flex;gap:14px;color:var(--m);font-size:13px;flex-wrap:wrap}
+#map{height:270px;border-radius:var(--r);margin:10px 0;z-index:1;background:#dfe9e2}
+.mk{color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:3px solid #fff;box-shadow:0 2px 8px #0005}
+.big{background:linear-gradient(120deg,var(--d),#0d6b40);color:#fff;border-radius:var(--r);padding:18px;margin:10px 0}.big small{color:#b8d9c6}.big .n{font-size:34px;font-weight:900;color:var(--g)}
+.bar{height:9px;background:#ffffff30;border-radius:9px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:var(--g);border-radius:9px}.bar.w i{background:var(--y)}.bar.d i{background:var(--red)}
+.sp{display:flex;gap:6px;margin:14px 0}.sp i{flex:1;height:6px;border-radius:6px;background:#dbe7df}.sp i.on{background:var(--g2)}
+.chip{display:inline-block;padding:10px 16px;border-radius:20px;background:#fff;border:2px solid #dbe7df;margin:4px 4px 4px 0;font-weight:600;cursor:pointer}.chip.on{background:var(--g);border-color:var(--g2)}
+.pv{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin:8px 0;display:none}
+.st{border-left:4px solid var(--g2);padding:2px 0 2px 12px;margin:8px 0;font-size:14px;line-height:1.35}.st small{color:var(--m)}
+.it{font-size:14px;padding:3px 0;color:var(--t)}
+.bub{max-width:80%;padding:10px 14px;border-radius:16px;background:#fff;margin:6px 0;box-shadow:0 1px 6px #0001;word-wrap:break-word}.bub.me{background:var(--g);margin-left:auto}
+.chat{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #dbe7df;z-index:10}.chat input{margin:0}.chat button{width:52px;border:0;border-radius:14px;background:var(--g);font-size:20px}
+details summary{cursor:pointer;font-weight:700;padding:6px 0}
+.cp{border:0;background:#e8f7ee;border-radius:10px;padding:6px 10px;font-weight:700;color:var(--g2);margin-left:auto}
+
+/* ruta en cartas apiladas */
+.stk{margin:10px 0}.stk-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--m);margin:6px 2px}
+.stk-dots{display:flex;gap:5px}.stk-dots i{width:22px;height:6px;border-radius:4px;background:#d5e3dc}.stk-dots i.ok{background:var(--g)}.stk-dots i.on{background:#ff7a1a}
+.stk-done{display:flex;align-items:center;gap:8px;background:#e6f4ec;color:#1b7a4a;border-radius:12px;padding:8px 12px;margin:6px 0;font-size:13px;font-weight:700;cursor:pointer}
+.stk-top{position:relative;z-index:5;border:2px solid #ff7a1a;animation:stkin .28s ease}
+@keyframes stkin{from{transform:translateY(14px);opacity:.3}to{transform:none;opacity:1}}
+.stk-peek{position:relative;background:#fff;border-radius:0 0 14px 14px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--m);box-shadow:0 3px 8px #0a3a2218;cursor:pointer;border:1px solid #e3ece7;margin-top:-10px}
+.stk-peek small{font-weight:600;opacity:.8}
+</style></head><body>
+
+<section class="scr on" id="s-welcome"><div class="hero">
+ <span class="fl" style="top:12%;left:9%">🛵</span><span class="fl" style="top:19%;right:11%;animation-delay:1s">💰</span>
+ <span class="fl" style="top:35%;left:17%;animation-delay:2s">📍</span><span class="fl" style="top:31%;right:19%;animation-delay:3s">📦</span>
+ <div><div class="logo">NEXORA</div><div class="tag">DRIVER</div></div>
+ <div><div class="slide" id="sl"></div><div class="dots" id="dots"></div>
+ <button class="btn" onclick="go('auth','reg')">Quiero ser repartidor</button>
+ <button class="btn o" onclick="go('auth','log')">Ya tengo cuenta</button>
+ <button class="btn demo" id="demoBtn" style="display:none" onclick="demo()">🧪 Entrar en modo prueba</button></div>
+</div></section>
+
+<section class="scr" id="s-auth"><div class="pad">
+ <div class="logo" style="font-size:28px;margin:16px 0">NEXORA <small style="font-size:13px;color:var(--y)">DRIVER</small></div>
+ <div class="tabs"><b id="tReg" onclick="mode('reg')">Registrarme</b><b id="tLog" onclick="mode('log')">Entrar</b></div>
+ <div id="nameBox"><input id="name" placeholder="Nombre completo" autocomplete="name"></div>
+ <input id="email" type="email" inputmode="email" placeholder="Correo electrónico" autocomplete="email" autocapitalize="none">
+ <div id="phBox"><input id="phone" type="tel" inputmode="numeric" placeholder="Número de teléfono (10 dígitos)" autocomplete="tel"></div>
+ <input id="pin" type="password" placeholder="Contraseña (mínimo 6 caracteres)">
+ <div class="err" id="err"></div><button class="btn" id="authBtn" onclick="auth()">Continuar</button>
+ <button class="btn l" onclick="go('welcome')">Atrás</button>
+</div></section>
+
+<section class="scr" id="s-setup"><div class="pad">
+ <div class="sp" id="spb"></div>
+ <div id="stp1"><div style="font-size:60px">🏘️</div><h1>¿En qué comunidad trabajas?</h1><p class="sub">Verás primero los pedidos más cercanos a ti.</p>
+  <input id="sComm" list="commDl" placeholder="Tu comunidad (ej. Cuautempan)"><datalist id="commDl"></datalist>
+  <p class="sub" style="margin:12px 0 4px">¿Qué usas para repartir?</p><div id="veh"></div></div>
+ <div id="stp2"><div style="font-size:60px">📍</div><h1>Tu ubicación</h1><p class="sub">Toca el botón estando donde te encuentras. Así sabremos qué pedidos te quedan cerca.</p></div>
+ <div id="stp3"><div style="font-size:60px">🪪</div><h1>Foto de tu INE</h1><p class="sub">Toma una foto clara por el frente, con buena luz y sin reflejos.</p>
+  <img class="pv" id="pv3"><input type="file" id="f3" accept="image/*" capture="environment" style="display:none" onchange="pickImg(3)"><button class="btn l" onclick="$('f3').click()">📷 Tomar foto de mi INE</button></div>
+ <div id="stp4"><div style="font-size:60px">🙂</div><h1>Foto de tu rostro</h1><p class="sub">Una selfie de frente, sin lentes ni gorra. Es para confirmar que realmente eres tú.</p>
+  <img class="pv" id="pv4"><input type="file" id="f4" accept="image/*" capture="user" style="display:none" onchange="pickImg(4)"><button class="btn l" onclick="$('f4').click()">🤳 Tomar mi selfie</button></div>
+ <div class="err" id="sErr"></div><button class="btn" id="sNext" onclick="setupNext()">Continuar</button>
+ <button class="btn l" onclick="logout()">Salir</button>
+</div></section>
+
+<section class="scr" id="s-pending"><div class="pad" style="text-align:center;padding-top:80px">
+ <div style="font-size:80px" id="pdIc">⏳</div><h1 id="pdT">Estamos revisando tus datos</h1>
+ <p class="sub" id="pdP">Verificamos tu INE y tu foto. Apenas te aprueben podrás empezar a repartir.</p>
+ <button class="btn" onclick="boot()">🔄 Ya me aprobaron, revisar</button><button class="btn l" onclick="logout()">Cerrar sesión</button></div></section>
+
+<section class="scr tb" id="s-reqs"><div class="top"><h2>Solicitudes</h2><span class="pill" id="repId"></span></div>
+ <div class="pad" style="padding-top:0"><div class="sw"><div><b id="onT">Desconectado</b><small id="onS">Conéctate para ver pedidos</small></div><button class="tg" id="tg" onclick="toggleOnline()"></button></div>
+ <div id="reqBan"></div><div id="reqList"></div></div></section>
+
+<section class="scr" id="s-det"><div class="top"><button class="ic" onclick="back()">←</button><h2 id="dTitle"></h2></div><div class="pad" style="padding-top:0;padding-bottom:40px" id="dBody"></div></section>
+
+<section class="scr tb" id="s-act"><div class="top"><h2>Mis entregas</h2></div><div class="pad" style="padding-top:0" id="actList"></div></section>
+
+<section class="scr tb" id="s-cash"><div class="top"><h2>Mi caja</h2></div><div class="pad" style="padding-top:0" id="cashBody"></div></section>
+
+<section class="scr" id="s-pay"><div class="top"><button class="ic" onclick="tab('cash')">←</button><h2>Ya hice mi depósito</h2></div><div class="pad" style="padding-top:0">
+ <p class="sub">Dinos cómo pagaste para que lo verifiquemos.</p>
+ <input id="pAmt" type="number" inputmode="decimal" placeholder="Monto depositado"><select id="pMeth"></select>
+ <input id="pRef" placeholder="Folio, referencia o nombre de quien depositó">
+ <img class="pv" id="pvP"><input type="file" id="fP" accept="image/*" style="display:none" onchange="pickImg('P')"><button class="btn l" onclick="$('fP').click()">📎 Adjuntar foto del comprobante (opcional)</button>
+ <div class="err" id="pErr"></div><button class="btn" id="pBtn" onclick="sendPay()">Enviar</button></div></section>
+
+<section class="scr" id="s-chat"><div class="top"><button class="ic" onclick="openDet(S.cur)">←</button><h2 id="chTitle"></h2></div>
+ <div class="pad" style="padding-top:0;padding-bottom:90px" id="chList"></div>
+ <div class="chat"><input id="chIn" placeholder="Escribe un mensaje…" maxlength="500" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()">➤</button></div></section>
+
+<section class="scr tb" id="s-acct"><div class="top"><h2>Mi cuenta</h2></div><div class="pad" style="padding-top:0" id="acBody"></div></section>
+
+<nav id="nav"><button data-t="reqs" onclick="tab('reqs')"><span>🛵</span>Pedidos<em id="bReq" style="display:none"></em></button><button data-t="act" onclick="tab('act')"><span>📦</span>Entregas<em id="bAct" style="display:none"></em></button><button data-t="cash" onclick="tab('cash')"><span>💰</span>Mi caja</button><button data-t="acct" onclick="tab('acct')"><span>👤</span>Cuenta</button></nav>
+<script>
+const $=id=>document.getElementById(id),N=window.NEXORA,money=n=>'$'+(+n||0).toFixed(2).replace(/\.00$/,'');
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pid=n=>String(n).padStart(4,'0'),live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY),sb=live?supabase.createClient(N.SUPABASE_URL,N.SUPABASE_ANON_KEY):null;
+let S={me:null,pos:null,online:false,cfg:{pay_methods:[]},bal:null,cur:null,from:'reqs',isDemo:false,step:1,veh:'',img:{},lastN:0},installEv=null,watch=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e});
+if(N.DEMO)$('demoBtn').style.display='block';
+const hav=(a,b)=>{const r=Math.PI/180,x=Math.sin((b.lat-a.lat)*r/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin((b.lng-a.lng)*r/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+// ---------- datos demo (sin Supabase) ----------
+const DD={
+ o1:{id:'o1',no:1042,status:'new',mine:false,fee:150,km:6.4,note:'Portón azul, junto a la tienda',to_comm:'Totomoxtla',earn:120,items_total:252,mk:5,collect:402,
+  client:{name:'Anita Vásquez López',pid:1007,lat:19.952,lng:-98.1,phone:'2310000000'},
+  stores:[{id:'s1',name:'Verdulería Doña Mary',community:'Cuautempan',lat:19.9,lng:-98.2,method:'cash',amount:62,picked:false,items:[{name:'Jitomate',qty:2,unit:'kilo'},{name:'Cilantro',qty:2,unit:'montón'}]},
+  {id:'s2',name:'Carnicería El Güero',community:'Cuautempan',lat:19.911,lng:-98.185,method:'cash',amount:185,picked:false,items:[{name:'Bistec de res',qty:1,unit:'kilo'}]}]},
+ o2:{id:'o2',no:1043,status:'new',mine:false,fee:45,km:2.1,note:null,to_comm:'Cuautempan',earn:36,items_total:96,mk:3,collect:141,
+  client:{name:'Luis Hernández',pid:1011,lat:19.905,lng:-98.192,phone:'2310000001'},
+  stores:[{id:'s3',name:'Abarrotes Lupita',community:'Tetela',lat:19.93,lng:-98.15,method:'cash',amount:93,picked:false,items:[{name:'Aceite 1L',qty:1,unit:'pieza'},{name:'Arroz',qty:1,unit:'kilo'}]}]}};
+let DB={owed:0,earned:0,n:0},DM={};
+const MET={transfer:'🏦',qr:'🔳',oxxo:'🏪',bank:'🏛️',other:'💳'};
+// ---------- capa de datos ----------
+const api={
+ async settings(){if(!live)return;const{data}=await sb.from('public_settings').select('*');(data||[]).forEach(r=>S.cfg[r.key]=r.value)},
+ async comms(){return live?((await sb.from('communities').select('name')).data||[]).map(x=>x.name):['Cuautempan','Tetela','Totomoxtla']},
+ async open(){if(!live)return Object.values(DD).filter(o=>o.status==='new').map(o=>({order_id:o.id,no:o.no,client_name:o.client.name,from_comms:[...new Set(o.stores.map(s=>s.community))],to_comm:o.to_comm,stores_n:o.stores.length,km:o.km,earn:o.earn,dist_km:S.pos?hav(S.pos,o.stores[0]):1.2}));
+  const{data,error}=await sb.rpc('driver_open_orders',{p_lat:S.pos?S.pos.lat:null,p_lng:S.pos?S.pos.lng:null});if(error)throw error;return data||[]},
+ async detail(id){if(!live)return DD[id]||null;const{data,error}=await sb.rpc('driver_order_detail',{p_id:id});if(error)throw error;return data},
+ async accept(id){if(!live){const o=DD[id];if(o.status!=='new')return'ya_tomado';if(DB.owed>1500)return'bloqueado';o.status='accepted';o.mine=true;return'ok'}
+  const{data,error}=await sb.rpc('accept_order',{p_id:id});if(error)throw error;return data},
+ async release(id){if(!live){DD[id].status='new';DD[id].mine=false;return true}return(await sb.rpc('release_order',{p_id:id})).data},
+ async picked(id,st){if(!live){const o=DD[id];o.stores.find(s=>s.id===st).picked=true;if(o.stores.every(s=>s.picked))o.status='picked';return true}return(await sb.rpc('mark_picked',{p_id:id,p_store:st})).data},
+ async deliver(id){if(!live){const o=DD[id];o.status='delivered';const due=o.mk+Math.round(o.fee*.2);DB.owed+=due;DB.earned+=o.earn;DB.n++;return{earn:o.earn,due,collected:o.collect}}
+  const{data,error}=await sb.rpc('deliver_order',{p_id:id});if(error)throw error;return data},
+ async balance(){if(!live)return{owed:DB.owed,overdue:0,limit:1500,blocked:DB.owed>1500,pending:0,earned_today:DB.earned,deliveries_today:DB.n};
+  const{data,error}=await sb.rpc('driver_balance');if(error)throw error;return data},
+ async mine(){if(!live)return Object.values(DD).filter(o=>['accepted','picked'].includes(o.status)).map(o=>({id:o.id,public_no:o.no,status:o.status,driver_earn:o.earn,stores_n:o.stores.length,dest_community:o.to_comm}));
+  return(await sb.from('orders').select('id,public_no,status,driver_earn,delivery_fee,stores_n,dest_community').eq('driver_id',S.me.id).in('status',['accepted','picked']).order('accepted_at')).data||[]},
+ async done(){if(!live)return Object.values(DD).filter(o=>o.status==='delivered').map(o=>({public_no:o.no,driver_earn:o.earn,driver_due:o.mk+Math.round(o.fee*.2)}));
+  return(await sb.from('orders').select('public_no,driver_earn,driver_due,delivered_at').eq('driver_id',S.me.id).eq('status','delivered').order('delivered_at',{ascending:false}).limit(15)).data||[]},
+ async settles(){if(!live)return[];return(await sb.from('settlements').select('amount,method,status,created_at').order('created_at',{ascending:false}).limit(10)).data||[]},
+ async paySend(amt,meth,ref,path){if(!live){DB.owed=Math.max(0,DB.owed-amt);return}const{error}=await sb.rpc('submit_settlement',{p_amount:amt,p_method:meth,p_ref:ref,p_proof:path});if(error)throw error},
+ async msgs(id){if(!live)return DM[id]||[];return((await sb.from('messages').select('*').eq('order_id',id).order('created_at')).data||[]).map(m=>({mine:m.sender_id===S.me.id,body:m.body}))},
+ async send(id,b){if(live)return sb.from('messages').insert({order_id:id,sender_id:S.me.id,body:b});(DM[id]=DM[id]||[]).push({mine:true,body:b});setTimeout(()=>{DM[id].push({mine:false,body:'Gracias, aquí te espero 🙌'});if($('s-chat').classList.contains('on'))loadChat()},1400)},
+ async setProfile(o){if(live){const{error}=await sb.from('profiles').update(o).eq('id',S.me.id);if(error)throw error}Object.assign(S.me,o)},
+ async upload(blob,name){const p=`${S.me.id}/${name}`;if(!live)return p;const{error}=await sb.storage.from('kyc').upload(p,blob,{contentType:'image/jpeg',upsert:true});if(error)throw error;return p}
+};
+// ---------- navegación ----------
+const NM={reqs:'reqs',act:'act',cash:'cash',acct:'acct'};
+function go(id,m){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));$('s-'+id).classList.add('on');scrollTo(0,0);if(m)mode(m);
+ $('nav').style.display=NM[id]?'flex':'none';document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===NM[id]))}
+function tab(t){S.from=t;go(t);({reqs:loadReqs,act:loadAct,cash:loadCash,acct:loadAcct})[t]()}
+function back(){tab(S.from||'reqs')}
+const SL=[['Gana por cada entrega','Elige los pedidos que te convienen y cobra por la distancia recorrida.'],['Una ruta, varias tiendas','Recoge en 2 o 3 negocios y entrega en un solo viaje.'],['Tú decides cuándo trabajar','Conéctate cuando quieras y deposita al terminar tu jornada.']];let si=0;
+function slide(){$('sl').innerHTML=`<h2>${SL[si][0]}</h2><p>${SL[si][1]}</p>`;$('dots').innerHTML=SL.map((_,i)=>`<i class="${i===si?'on':''}"></i>`).join('');si=(si+1)%SL.length}slide();setInterval(slide,3500);
+let M='reg';function mode(m){M=m;$('nameBox').style.display=m==='reg'?'block':'none';$('phBox').style.display=m==='reg'?'block':'none';$('tReg').className=m==='reg'?'on':'';$('tLog').className=m==='log'?'on':'';$('err').textContent=''}
+// ---------- cuenta ----------
+const email=p=>p+'@nexora.app';
+async function auth(){const ph=$('phone').value.replace(/\D/g,''),pw=$('pin').value,nm=$('name').value.trim();$('err').textContent='';
+ const em=$('email').value.trim().toLowerCase();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return $('err').textContent='Escribe un correo electrónico válido';
+ if(M==='reg'&&ph.length!==10)return $('err').textContent='Escribe tu número de teléfono de 10 dígitos';
+ if(pw.length<6)return $('err').textContent='La contraseña debe tener al menos 6 caracteres';
+ if(M==='reg'&&nm.split(' ').filter(Boolean).length<2)return $('err').textContent='Escribe tu nombre completo';
+ if(!live)return $('err').textContent='Falta conectar Supabase en config.js (o usa el modo prueba)';
+ $('authBtn').disabled=true;
+ const r=M==='reg'?await sb.auth.signUp({email:em,password:pw,options:{data:{phone:ph,full_name:nm,role:'driver'}}}):await sb.auth.signInWithPassword({email:em,password:pw});
+ $('authBtn').disabled=false;if(r.error)return $('err').textContent=(r.error.message.includes('already')||r.error.message.includes('Database error'))?'Ese correo o teléfono ya está registrado':(M==='reg'?'No se pudo crear la cuenta. Revisa tus datos':'Correo o contraseña incorrectos');
+ if(!r.data.session)return $('err').textContent='Activa el acceso sin confirmar correo en Supabase (ver README)';
+ await boot()}
+async function testLogin(){const t=N.TEST,e=t.driver+'@nexora.app';
+ let r=await sb.auth.signInWithPassword({email:e,password:t.pass});
+ if(r.error)r=await sb.auth.signUp({email:e,password:t.pass,options:{data:{phone:t.driver,full_name:'Repartidor Prueba',role:'driver'}}});
+ if(r.error||!r.data.session){alert('No se pudo entrar con la cuenta de prueba. Revisa que "Confirm email" esté desactivado en Supabase y que ya ejecutaste el SQL.');return false}return true}
+async function demo(){S.isDemo=true;
+ if(live){if(await testLogin())await boot();return}
+ S.me={full_name:'Repartidor Demo',public_id:3,driver_status:'approved',phone:'Modo demo',community:'Cuautempan',vehicle:'Moto'};S.pos={lat:19.905,lng:-98.195};startApp()}
+async function boot(){await api.settings();
+ const{data:u}=await sb.auth.getUser();if(!u.user)return go('welcome');
+ const{data:p}=await sb.from('profiles').select('*').eq('id',u.user.id).single();
+ if(!p||p.role!=='driver'){await sb.auth.signOut();go('auth','log');return $('err').textContent='Ese número no es de un repartidor. Usa la app Nexora o Nexora Business.'}
+ S.me=p;
+ if(S.isDemo&&(!p.community||!p.ine_path||!p.face_path)){await api.setProfile({community:'Cuautempan',vehicle:'Moto',ine_path:'demo',face_path:'demo'})}
+ if(!S.me.community||!S.me.vehicle)return showStep(1);
+ if(S.me.last_lat==null&&!S.isDemo)return showStep(2);
+ if(!S.me.ine_path)return showStep(3);
+ if(!S.me.face_path)return showStep(4);
+ if(S.me.driver_status!=='approved'){const st=S.me.driver_status;go('pending');
+  $('pdIc').textContent=st==='pending'?'⏳':'⛔';$('pdT').textContent=st==='pending'?'Estamos revisando tus datos':st==='rejected'?'No pudimos aprobar tu registro':'Tu cuenta está suspendida';
+  $('pdP').textContent=st==='pending'?'Verificamos tu INE y tu foto. Apenas te aprueben podrás empezar a repartir.':'Comunícate con soporte para más información.';return}
+ startApp()}
+function startApp(){startGPS();S.online=false;tab('reqs');
+ if(live)sb.channel('nx-m').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{if(p.new.order_id===S.cur&&$('s-chat').classList.contains('on'))loadChat()}).subscribe()}
+async function logout(){try{if(live){if(S.me&&S.online)await sb.from('profiles').update({online:false}).eq('id',S.me.id);await sb.auth.signOut()}}catch(e){}
+ if(watch!=null)navigator.geolocation.clearWatch(watch);watch=null;S={...S,me:null,online:false,pos:null,isDemo:false,img:{}};go('welcome')}
+// ---------- registro paso a paso (comunidad, ubicación, INE, rostro) ----------
+const VEH=['🏍️ Moto','🚲 Bici','🚗 Auto','🚶 A pie'];
+function showStep(n){S.step=n;go('setup');$('sErr').textContent='';
+ $('spb').innerHTML=[1,2,3,4].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('');
+ [1,2,3,4].forEach(i=>$('stp'+i).style.display=i===n?'block':'none');
+ $('sNext').textContent=n===2?'📍 Enviar mi ubicación':n===4?'Terminar registro':'Continuar';
+ if(n===1){api.comms().then(c=>$('commDl').innerHTML=c.map(x=>`<option value="${esc(x)}">`).join(''));
+  $('sComm').value=S.me.community||'';$('veh').innerHTML=VEH.map(v=>`<span class="chip ${S.veh===v?'on':''}" onclick="S.veh='${v}';showStep(1)">${v}</span>`).join('')}}
+async function pickImg(k){const f=$('f'+k).files[0];if(!f)return;S.img[k]=await shrink(f);const pv=$('pv'+k);pv.src=URL.createObjectURL(S.img[k]);pv.style.display='block'}
+function shrink(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const m=1280,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(),'image/jpeg',.8)};im.onerror=no;im.src=URL.createObjectURL(f)})}
+async function setupNext(){const n=S.step,e=$('sErr');e.textContent='';$('sNext').disabled=true;
+ try{
+  if(n===1){const c=$('sComm').value.trim();if(c.length<3||!S.veh){e.textContent='Escribe tu comunidad y elige qué usas para repartir';return}await api.setProfile({community:c,vehicle:S.veh.replace(/^\S+\s/,'')});showStep(2)}
+  else if(n===2){e.textContent='Obteniendo ubicación…';const p=await getPos();S.pos=p;await api.setProfile({last_lat:p.lat,last_lng:p.lng,last_seen:new Date().toISOString()});showStep(3)}
+  else if(n===3){if(!S.img[3]){e.textContent='Toma la foto de tu INE';return}e.textContent='Subiendo…';await api.setProfile({ine_path:await api.upload(S.img[3],'ine.jpg')});showStep(4)}
+  else{if(!S.img[4]){e.textContent='Toma tu selfie';return}e.textContent='Subiendo…';await api.setProfile({face_path:await api.upload(S.img[4],'face.jpg')});await boot()}
+ }catch(x){e.textContent=n===2?'Activa el permiso de ubicación para continuar':'No se pudo guardar. Revisa tu conexión e inténtalo otra vez.'}
+ finally{$('sNext').disabled=false}}
+function getPos(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lng:p.coords.longitude}),no,{enableHighAccuracy:true,timeout:15000}))}
+function startGPS(){if(watch!=null||!navigator.geolocation)return;watch=navigator.geolocation.watchPosition(p=>{S.pos={lat:p.coords.latitude,lng:p.coords.longitude}},()=>{},{enableHighAccuracy:true,maximumAge:10000})}
+setInterval(async()=>{if(!S.me)return;
+ if(live&&S.online&&S.pos){api.setProfile({last_lat:S.pos.lat,last_lng:S.pos.lng,last_seen:new Date().toISOString()}).catch(()=>{})}
+ if(S.online&&$('s-reqs').classList.contains('on'))loadReqs()},12000);
+</script>
+<script>
+// ---------- conexión y solicitudes ----------
+function paintOnline(){$('tg').classList.toggle('on',S.online);$('onT').textContent=S.online?'🟢 Conectado':'Desconectado';$('onS').textContent=S.online?'Recibiendo pedidos cercanos':'Conéctate para ver pedidos'}
+async function toggleOnline(){S.online=!S.online;paintOnline();
+ if(S.online&&!S.pos){try{S.pos=await getPos()}catch(e){}}
+ try{await api.setProfile({online:S.online,...(S.pos?{last_lat:S.pos.lat,last_lng:S.pos.lng,last_seen:new Date().toISOString()}:{})})}catch(e){}
+ loadReqs()}
+function badge(id,n){const b=$(id);b.style.display=n?'block':'none';b.textContent=n}
+async function loadReqs(){$('repId').textContent=S.me.public_id?'Repartidor '+pid(S.me.public_id):'';paintOnline();
+ let bal,mine=[],list=[];
+ try{[bal,mine]=await Promise.all([api.balance(),api.mine()]);S.bal=bal}catch(e){$('reqList').innerHTML='<div class="note bad">No se pudo cargar. Revisa tu conexión.</div>';return}
+ badge('bAct',mine.length);
+ $('reqBan').innerHTML=(bal.blocked?`<div class="note bad">🔒 Le debes a Nexora ${money(bal.owed)}. No podrás aceptar pedidos hasta pagarlo. <a href="#" onclick="tab('cash');return false"><b>Ir a Mi caja</b></a></div>`:'')
+  +(mine.length?`<div class="note ok">📦 Tienes ${mine.length} entrega${mine.length>1?'s':''} activa${mine.length>1?'s':''}. <a href="#" onclick="tab('act');return false"><b>Verlas</b></a></div>`:'');
+ if(!S.online){badge('bReq',0);$('reqList').innerHTML='<div style="text-align:center;padding:50px 10px"><div style="font-size:60px">😴</div><p class="sub">Estás desconectado.<br>Activa el interruptor para recibir pedidos.</p></div>';return}
+ try{list=await api.open()}catch(e){$('reqList').innerHTML='<div class="note bad">No se pudieron cargar los pedidos.</div>';return}
+ badge('bReq',list.length);if(list.length>S.lastN)beep();S.lastN=list.length;
+ $('reqList').innerHTML=list.length?list.map(o=>`<div class="card blk rq" onclick="openDet('${o.order_id}')"><div class="a"><h3>${esc(o.client_name)}</h3><div class="gl"><small>${S.bal&&S.bal.employee?'GENERA':'TÚ GANAS'}</small><div class="g">${money(o.earn)}</div></div></div>
+  <div class="rt"><div><small>🏪 Compra en</small><b>${esc((o.from_comms||[]).join(' · '))}</b></div><span>➜</span><div class="to"><small>🏠 Lleva a</small><b>${esc(o.to_comm||'Entrega')}</b></div></div>
+  <div class="m"><span>🏪 tiendas: ${o.stores_n}</span><span>🛣️ ${o.km?(+o.km).toFixed(1)+' km':'—'}</span>${o.dist_km!=null?`<span>📍 a ${(+o.dist_km).toFixed(1)} km de ti</span>`:''}</div></div>`).join('')
+  :'<div style="text-align:center;padding:50px 10px"><div style="font-size:60px">🔎</div><p class="sub">Aún no hay solicitudes cerca.<br>Te avisaremos cuando llegue una.</p></div>'}
+function beep(){try{navigator.vibrate&&navigator.vibrate([200,100,200]);const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();setTimeout(()=>{o.stop();c.close()},180)}catch(e){}}
+// ---------- rutas POR CALLES (nunca en línea recta) ----------
+const RC={},TURN={0:'Gira a la izquierda',1:'Gira a la derecha',2:'Gira fuerte a la izquierda',3:'Gira fuerte a la derecha',4:'Ligera a la izquierda',5:'Ligera a la derecha',6:'Sigue recto',7:'Entra a la glorieta',8:'Sal de la glorieta',9:'Da vuelta en U',10:'Llegas a tu destino',11:'Sal por'};
+async function route(a,b){const k=[a.lat,a.lng,b.lat,b.lng].map(x=>(+x).toFixed(5)).join();if(RC[k])return RC[k];let o;
+ try{const r=await fetch(`${N.ROUTE_API}?inicio=${a.lng},${a.lat}&fin=${b.lng},${b.lat}`),d=await r.json(),f=d.features[0],pr=f.properties||{};
+  let m=pr.summary?.distance;if(!(m>0))m=(pr.segments||[]).reduce((x,s)=>x+(s.distance||0),0);if(!(m>0))throw 0;
+  o={coords:f.geometry.coordinates.map(c=>[c[1],c[0]]),km:m/1000,street:true,steps:(pr.segments||[]).flatMap(s=>s.steps||[]).map(s=>({n:s.name,m:s.distance,t:s.type}))}}
+ catch(e){o={coords:[[a.lat,a.lng],[b.lat,b.lng]],km:hav(a,b)*1.3,street:false,steps:[]}}
+ return RC[k]=o}
+async function plan(det){const E=det.client,st=det.stores.filter(s=>s.lat!=null&&s.lng!=null);
+ const home=await Promise.all(st.map(s=>route(s,E)));st.forEach((s,i)=>{s._home=home[i];s._km=home[i].km});
+ st.sort((a,b)=>b._km-a._km);st.forEach((s,i)=>s._r=i+1);   // R1 = la tienda más lejana de la casa del cliente
+ const legs=[];
+ if(S.pos&&st.length&&det.status!=='delivered'){const l=await route(S.pos,st.find(s=>!s.picked)||st[0]);legs.push({...l,drv:true,from:'Tu ubicación',to:'R'+((st.find(s=>!s.picked)||st[0])._r)})}
+ for(let i=0;i<st.length-1;i++){const l=await route(st[i],st[i+1]);legs.push({...l,from:'R'+st[i]._r,to:'R'+st[i+1]._r})}
+ if(st.length)legs.push({...st[st.length-1]._home,from:'R'+st.length,to:'E'});
+ return{stores:st,legs,km:legs.filter(l=>!l.drv).reduce((a,l)=>a+l.km,0),street:legs.every(l=>l.street)}}
+let MAP=null;
+const mk=(t,c)=>L.divIcon({html:`<div class="mk" style="background:${c}">${t}</div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]});
+function drawMap(pl,det){if(MAP){MAP.remove();MAP=null}if(!window.L||!$('map'))return;
+ MAP=L.map('map',{zoomControl:false,attributionControl:false}).setView([det.client.lat,det.client.lng],13);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(MAP);const pts=[];
+ pl.legs.forEach(l=>{L.polyline(l.coords,{color:l.drv?'#6b7f74':'#0fb85c',weight:l.drv?3:5,opacity:.9,dashArray:(l.drv||!l.street)?'8,8':null}).addTo(MAP);pts.push(...l.coords)});
+ pl.stores.forEach(s=>{L.marker([s.lat,s.lng],{icon:mk('R'+s._r,s.picked?'#9aa8a0':'#ff7a1a')}).addTo(MAP).bindPopup('<b>'+esc(s.name)+'</b>');pts.push([s.lat,s.lng])});
+ L.marker([det.client.lat,det.client.lng],{icon:mk('E','#0fb85c')}).addTo(MAP).bindPopup('<b>Entrega</b> · casa del cliente');pts.push([det.client.lat,det.client.lng]);
+ if(S.pos)L.circleMarker([S.pos.lat,S.pos.lng],{radius:8,color:'#fff',weight:3,fillColor:'#2f7bff',fillOpacity:1}).addTo(MAP);
+ MAP.fitBounds(pts,{padding:[30,30]});setTimeout(()=>MAP&&MAP.invalidateSize(),250)}
+const fm=m=>m>=1000?(m/1000).toFixed(1)+' km':Math.round(m)+' m';
+function streets(pl){return pl.legs.map(l=>{const s=l.steps.filter(x=>x.t!=null);return`<div class="st"><b>${l.from} ➜ ${l.to}</b> · ${l.km.toFixed(1)} km${l.street?'':' <small>(aprox., no se pudo trazar por calles)</small>'}
+ ${s.map(x=>`<div><small>${TURN[x.t]||'Continúa'}${x.n&&x.n!=='-'?' por <b>'+esc(x.n)+'</b>':''} · ${fm(x.m||0)}</small></div>`).join('')||(l.street?'<small>Sigue la línea verde del mapa.</small>':'')}</div>`}).join('')}
+const gm=(lat,lng)=>`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+// ---------- detalle del pedido ----------
+async function openDet(id){S.cur=id;go('det');$('dTitle').textContent='Pedido';$('dBody').innerHTML='<p class="sub">Cargando pedido…</p>';
+ let det;try{det=await api.detail(id)}catch(e){det=null}
+ if(!det){alert('Este pedido ya no está disponible.');return tab('reqs')}
+ STK=null;S.det=det;$('dTitle').textContent='Pedido #'+det.no;renderDet(det,null);
+ const pl=await plan(det);if(S.cur!==id||!$('s-det').classList.contains('on'))return;S.pl=pl;renderDet(det,pl);drawMap(pl,det)}
+function supportHTML(){const n=String(S.cfg.support_phone||'').replace(/\D/g,'');
+ return n?`<a class="btn l s" href="tel:+${n}">📞 Llamar a soporte</a><a class="btn l s" href="https://wa.me/${n}" target="_blank" rel="noopener">💬 Mensaje a soporte</a>`:`<div class="note">🛟 Soporte estará disponible muy pronto.</div>`}
+function renderDet(det,pl){const st=pl?pl.stores:det.stores,s=det.status,mine=det.mine,cash=det.stores.filter(x=>x.method==='cash'),need=cash.reduce((a,x)=>a+ +x.amount,0),hasCard=det.stores.some(x=>x.method==='card');
+ const comms=[...new Set(det.stores.map(x=>x.community))].join(' · ');
+ $('dBody').innerHTML=`<div class="big"><small>Cliente</small><div style="font-size:20px;font-weight:800">${esc(det.client.name)} <span class="pill">${pid(det.client.pid)}</span></div>
+  <div class="rt"><div><small>🏪 Compra en</small><b>${esc(comms)}</b></div><span>➜</span><div class="to"><small>🏠 Lleva a</small><b>${esc(det.to_comm||'Entrega')}</b></div></div><small>${S.bal&&S.bal.employee?'💰 Esta entrega genera (es de tu patrón)':'💰 Tú ganas por esta entrega'}</small><div class="n">${money(det.earn)}</div>
+  <small>🏪 ${det.stores.length} tienda${det.stores.length>1?'s':''} · 🛣️ ${pl?pl.km.toFixed(1):'…'} km por calle${pl&&!pl.street?' (aprox.)':''}</small></div>
+ <div class="card blk"><h3>💵 Dinero de este pedido</h3>
+  ${need?`<div class="pay1"><span>1️⃣ Págale a la tienda</span><b>${money(need)}</b></div><p class="sub" style="margin:0 0 8px">Lleva suficiente efectivo. Lo recuperas cuando el cliente te paga.</p>`:''}
+  ${hasCard?`<p class="sub">💳 En las tiendas con tarjeta no pagas nada: solo recoges.</p>`:''}
+  <div class="pay1 cl"><span>${need?'2️⃣ ':''}Cóbrale al cliente <small>(envío incluido)</small></span><b>${money(det.collect)}</b></div></div>
+ <div id="map"></div>
+ <details class="card blk" style="margin-top:0"><summary>🛣️ Calles que debes tomar</summary>${pl?streets(pl):'<p class="sub">Trazando ruta por calles…</p>'}</details>
+ ${stackHTML(det,st)}
+ ${actions(det)}${mine?supportHTML():''}`;
+ if(pl)drawMap(pl,det)}
+let STK=null;
+function clientCard(det){const s=det.status,mine=det.mine;
+ return`<div class="card blk stk-top"><div style="display:flex;gap:12px;align-items:center"><div class="im">🏠</div><div style="flex:1"><h3>Entrega al cliente</h3><p>${esc(det.client.name)}${det.client.phone?' · '+esc(det.client.phone):''}</p></div></div>
+  ${det.note?`<div class="note">📝 ${esc(det.note)}</div>`:''}
+  ${mine&&s!=='delivered'?`<a class="btn l s" target="_blank" rel="noopener" href="${gm(det.client.lat,det.client.lng)}">🧭 Navegar a la casa del cliente</a>`:''}</div>`}
+function stk(i){STK=i;renderDet(S.det,S.pl)}
+function stackHTML(det,st){const s=det.status,n=st.length,steps=[...st.map(x=>({n:x.name,c:x.community,done:!!x.picked,i:'🏪',x})),{n:'Casa de '+(det.client.name||'cliente').split(' ')[0],c:det.to_comm||'',done:s==='delivered',i:'🏠'}];
+ const auto=(s==='picked'||s==='delivered')?n:Math.max(0,st.findIndex(x=>!x.picked)),cur=STK!=null&&STK>=0&&STK<=n?STK:auto;
+ const dots=steps.map((p,i)=>`<i class="${p.done?'ok':i===cur?'on':''}"></i>`).join('');
+ const label=cur===n?'Último paso · Entrega':`Paso ${cur+1} de ${steps.length} · ${cur===0&&n>1?'Primero recoge aquí':'Recoge aquí'}`;
+ const before=steps.slice(0,cur).map((p,i)=>`<div class="stk-done" onclick="stk(${i})">${p.done?'✓':p.i} ${i+1} · ${esc(p.n)}</div>`).join('');
+ const top=cur===n?clientCard(det):storeCard(det,st[cur]).replace('class="card blk"','class="card blk stk-top"');
+ const after=steps.slice(cur+1).map((p,j)=>`<div class="stk-peek" style="margin-left:${Math.min(j+1,3)*6}px;margin-right:${Math.min(j+1,3)*6}px;z-index:${4-j}" onclick="stk(${cur+1+j})">${p.i} <small>Después · </small>${esc(p.n)}${p.c?` <small>· ${esc(p.c)}</small>`:''}</div>`).join('');
+ return`<div class="stk"><div class="stk-h"><span>${label}</span><span class="stk-dots">${dots}</span></div>${before}${top}${after}</div>`}
+function storeCard(det,x){const c=x.method==='cash',s=det.status,mine=det.mine,r=x._r?`<b style="color:#ff7a1a">R${x._r}</b> · `:'';
+ return`<div class="card blk"><div style="display:flex;gap:12px;align-items:center"><div class="im">${x.image?`<img src="${esc(x.image)}">`:'🏪'}</div><div style="flex:1"><h3>${r}${esc(x.name)}</h3><p>${esc(x.community||'')}</p></div>${x.picked?'<span class="pill">✓ Recogido</span>':''}</div>
+ <div style="margin-top:8px">${(x.items||[]).map(i=>`<div class="it">• ${i.qty} ${esc(i.unit||'')} — ${esc(i.name)}</div>`).join('')}</div>
+ <div class="note ${c?'':'ok'}">${c?`💵 Esta tienda cobra en <b>efectivo</b>: paga <b>${money(x.amount)}</b> con tu dinero. El cliente te lo devuelve al entregar.`:`💳 Esta tienda cobra por <b>tarjeta</b>: no pagues nada, solo recoge el pedido.`}</div>
+ ${mine&&!x.picked&&s==='accepted'?`<button class="btn s" onclick="doPick('${x.id}')">${c?'✅ Ya pagué y recogí':'✅ Ya recogí'}</button>`:''}
+ ${mine&&s!=='delivered'&&x.lat!=null?`<a class="btn l s" target="_blank" rel="noopener" href="${gm(x.lat,x.lng)}">🧭 Ir a esta tienda</a>`:''}</div>`}
+function actions(det){const s=det.status,anyPicked=det.stores.some(x=>x.picked);
+ if(s==='new')return`<button class="btn" onclick="doAccept()">✅ Aceptar pedido</button><button class="btn l" onclick="tab('reqs')">Buscar otro</button>`;
+ if(s==='delivered')return'<div class="note ok">✅ Pedido entregado.</div>';
+ return`<button class="btn l" onclick="openChat()">💬 Chatear con el cliente</button>`
+  +(s==='picked'?`<button class="btn" onclick="doDeliver()">💵 Ya cobré y entregué</button>`:'')
+  +(s==='accepted'&&!anyPicked?`<button class="btn red s" onclick="doRelease()">Liberar este pedido</button>`:'')}
+async function doAccept(){const r=await api.accept(S.cur);
+ if(r==='ok'){await openDet(S.cur);return}
+ alert({bloqueado:'Tienes dinero pendiente por depositar. Ve a Mi caja para poder seguir trabajando.',limite:'Ya tienes el máximo de entregas activas. Termina una para tomar otra.',ya_tomado:'Otro repartidor ya tomó este pedido. Busca otro.',no_autorizado:'Tu cuenta aún no está aprobada.'}[r]||'No se pudo aceptar el pedido.');
+ r==='bloqueado'?tab('cash'):tab('reqs')}
+async function doPick(st){await api.picked(S.cur,st);await openDet(S.cur)}
+async function doRelease(){if(!confirm('¿Liberar este pedido para que lo tome otro repartidor?'))return;await api.release(S.cur);tab('reqs')}
+async function doDeliver(){if(!confirm('¿Ya cobraste al cliente y le entregaste todo?'))return;
+ const r=await api.deliver(S.cur);if(!r)return alert('No se pudo marcar como entregado.');
+ $('dBody').innerHTML=`<div style="text-align:center;padding-top:30px"><div style="font-size:80px">🎉</div><h1>¡Entrega completada!</h1>
+  <div class="big" style="text-align:left"><div class="row"><span>Cobraste al cliente</span><b>${money(r.collected)}</b></div>${S.bal&&S.bal.employee?`<div class="row"><span>Ganancia de la entrega</span><b style="color:var(--g)">${money(r.earn)}</b></div>
+  <div class="row"><span>Debes entregar a tu patrón</span><b>${money(+r.due+ +r.earn)}</b></div></div>
+  <p class="sub">Todo lo que cobras es de tu patrón. Entrégaselo o deposítalo; él te paga tu sueldo del día.</p>`:`<div class="row"><span>Tu ganancia</span><b style="color:var(--g)">${money(r.earn)}</b></div>
+  <div class="row"><span>Le debes a Nexora por esta entrega</span><b>${money(r.due)}</b></div></div>
+  <p class="sub">Deposita lo pendiente antes de terminar tu jornada para seguir recibiendo pedidos.</p>`}
+  <button class="btn" onclick="tab('reqs')">Buscar más pedidos</button><button class="btn l" onclick="tab('cash')">Ver mi caja</button></div>`}
+// ---------- mis entregas ----------
+async function loadAct(){const[m,d]=await Promise.all([api.mine(),api.done()]);badge('bAct',m.length);
+ $('actList').innerHTML=(m.length?m.map(o=>`<div class="card c" onclick="openDet('${o.id}')"><div class="im">${o.status==='picked'?'📦':'🛵'}</div><div><h3>Pedido #${o.public_no}</h3><p>${o.status==='picked'?'Ya recogido · entrega al cliente':'Ve por los productos'} · ${o.stores_n} tienda${o.stores_n>1?'s':''}</p></div><b style="margin-left:auto">${money(o.driver_earn??0)}</b></div>`).join(''):'<p class="sub">No tienes entregas activas.</p>')
+  +(d.length?'<h3 style="margin:18px 0 4px">Entregadas recientemente</h3>'+d.map(o=>`<div class="card"><div class="im">✅</div><div><h3>Pedido #${o.public_no}</h3><p>Ganancia ${money(o.driver_earn)}</p></div></div>`).join(''):'')}
+// ---------- mi caja ----------
+async function loadCash(){$('cashBody').innerHTML='<p class="sub">Cargando…</p>';
+ const[b,h]=await Promise.all([api.balance(),api.settles()]);S.bal=b;const pct=Math.min(100,Math.round(b.owed/b.limit*100)),mt=S.cfg.pay_methods||[];
+ const emp=!!b.employee;
+ $('cashBody').innerHTML=emp?`<div class="big"><small>💼 Debes entregar a tu patrón</small><div class="n">${money(b.owed)}</div><small>Es todo el dinero que cobraste (productos pagados con tarjeta, envíos y ganancias). Entrégalo en persona o deposítalo como se indica abajo.</small></div>
+ <div class="note ok">💼 Trabajas con sueldo de <b>${money(b.wage)} por día</b>, hagas o no hagas pedidos. Tu patrón te lo paga a ti.</div>
+ ${b.pending>0?`<div class="note">🕓 Tienes ${money(b.pending)} en revisión.</div>`:''}
+ <div class="card"><div class="im">📦</div><div><h3>Hoy generaste ${money(b.earned_today)}</h3><p>${b.deliveries_today} entrega${b.deliveries_today==1?'':'s'} · tu sueldo de hoy: ${money(b.wage)}</p></div></div>
+ <h3 style="margin:18px 0 6px">Cómo entregar el dinero</h3>
+ <div class="card blk"><h3>🤝 En persona</h3><p>Entrégaselo a tu patrón. Él lo registra y se descuenta de lo que debes.</p></div>
+ ${mt.length?mt.map(m=>`<div class="card blk"><div style="display:flex;gap:10px;align-items:center"><div class="im">${MET[m.type]||'💳'}</div><div style="flex:1"><h3>${esc(m.label)}</h3><p>${esc(m.detail||'')}</p></div>${m.detail?`<button class="cp" data-c="${esc(m.detail)}" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.dataset.c);this.textContent='Copiado'">Copiar</button>`:''}</div>${m.image?`<img src="${esc(m.image)}" style="width:100%;border-radius:14px;margin-top:8px">`:''}</div>`).join(''):''}
+ ${b.owed>0?`<button class="btn" onclick="openPay()">✅ Ya hice mi depósito</button>`:''}
+ ${h.length?'<h3 style="margin:18px 0 4px">Mis entregas de dinero</h3>'+h.map(x=>`<div class="card"><div class="im">🧾</div><div><h3>${money(x.amount)}</h3><p>${esc(x.method||'')} · ${new Date(x.created_at).toLocaleDateString()}</p></div><span class="pill ${x.status==='confirmed'?'':x.status==='pending'?'y':'r'}" style="margin-left:auto">${x.status==='confirmed'?'Confirmado':x.status==='pending'?'En revisión':'Rechazado'}</span></div>`).join(''):''}`
+ :`<div class="big"><small>Le debes a Nexora</small><div class="n">${money(b.owed)}</div>${b.owed>0?`<small>Es la parte de Nexora de las entregas que cobraste en efectivo. No es una cuota: si no cobraste nada, no debes nada.</small>`:`<small>No debes nada por ahora 🎉</small>`}${pct>=60?`<div class="bar ${pct>85?'d':'w'}"><i style="width:${pct}%"></i></div><small>Puedes acumular hasta ${money(b.limit)}. Al llegar a ese monto, deposita para seguir recibiendo pedidos.</small>`:''}</div>
+ ${b.overdue>0?`<div class="note bad">🔒 Tienes un depósito atrasado. No podrás aceptar pedidos hasta pagarlo.</div>`:b.blocked?`<div class="note bad">🔒 Llegaste al límite. Deposita para poder aceptar más pedidos.</div>`:b.owed>0?`<div class="note">⏰ Deposita antes de terminar tu jornada (en la noche o madrugada) para seguir trabajando mañana.</div>`:'<div class="note ok">✅ Estás al corriente. ¡Sigue así!</div>'}
+ ${b.pending>0?`<div class="note">🕓 Tienes ${money(b.pending)} en revisión.</div>`:''}
+ <div class="card"><div class="im">💰</div><div><h3>Hoy ganaste ${money(b.earned_today)}</h3><p>${b.deliveries_today} entrega${b.deliveries_today==1?'':'s'}</p></div></div>
+ <h3 style="margin:18px 0 6px">Cómo depositar</h3>
+ ${mt.length?mt.map(m=>`<div class="card blk"><div style="display:flex;gap:10px;align-items:center"><div class="im">${MET[m.type]||'💳'}</div><div style="flex:1"><h3>${esc(m.label)}</h3><p>${esc(m.detail||'')}</p></div>${m.detail?`<button class="cp" data-c="${esc(m.detail)}" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.dataset.c);this.textContent='Copiado'">Copiar</button>`:''}</div>${m.image?`<img src="${esc(m.image)}" style="width:100%;border-radius:14px;margin-top:8px">`:''}</div>`).join(''):'<div class="note">Muy pronto verás aquí las formas de depositar (transferencia, QR, banco o tienda).</div>'}
+ ${b.owed>0?`<button class="btn" onclick="openPay()">✅ Ya hice mi depósito</button>`:''}
+ ${h.length?'<h3 style="margin:18px 0 4px">Mis depósitos</h3>'+h.map(x=>`<div class="card"><div class="im">🧾</div><div><h3>${money(x.amount)}</h3><p>${esc(x.method||'')} · ${new Date(x.created_at).toLocaleDateString()}</p></div><span class="pill ${x.status==='confirmed'?'':x.status==='pending'?'y':'r'}" style="margin-left:auto">${x.status==='confirmed'?'Confirmado':x.status==='pending'?'En revisión':'Rechazado'}</span></div>`).join(''):''}`}
+function openPay(){go('pay');$('pAmt').value=Math.ceil(S.bal.owed);$('pRef').value='';$('pErr').textContent='';$('pvP').style.display='none';delete S.img.P;
+ const mt=(S.cfg.pay_methods||[]).map(m=>m.label);$('pMeth').innerHTML=[...mt,'Otro'].map(x=>`<option>${esc(x)}</option>`).join('')}
+async function sendPay(){const a=+$('pAmt').value;if(!(a>0))return $('pErr').textContent='Escribe el monto que depositaste';$('pBtn').disabled=true;
+ try{let path=null;if(S.img.P)path=await api.upload(S.img.P,'proof-'+Date.now()+'.jpg');await api.paySend(a,$('pMeth').value,$('pRef').value.trim(),path);alert('¡Listo! Recibimos tu aviso de depósito.');tab('cash')}
+ catch(e){$('pErr').textContent='No se pudo enviar. Inténtalo otra vez.'}finally{$('pBtn').disabled=false}}
+// ---------- chat con el cliente ----------
+async function openChat(){$('chTitle').textContent='Cliente '+pid(S.det.client.pid);go('chat');await loadChat()}
+async function loadChat(){const m=await api.msgs(S.cur);$('chList').innerHTML=m.length?m.map(x=>`<div class="bub ${x.mine?'me':''}">${esc(x.body)}</div>`).join(''):'<p class="sub" style="text-align:center;margin-top:30px">Avísale que ya vas en camino o que ya llegaste 👋</p>';scrollTo(0,document.body.scrollHeight)}
+async function sendMsg(){const b=$('chIn').value.trim();if(!b)return;$('chIn').value='';await api.send(S.cur,b);loadChat()}
+// ---------- cuenta ----------
+function loadAcct(){const m=S.me||{};$('acBody').innerHTML=`<div class="card"><div class="im">🛵</div><div><h3>${esc(m.full_name)}</h3><p>${esc(m.phone||'')}</p>${m.public_id?`<span class="pill">Repartidor ${pid(m.public_id)}</span>`:''}</div></div>
+ <div class="card blk"><div class="row"><span>Comunidad</span><b>${esc(m.community||'—')}</b></div><div class="row"><span>Vehículo</span><b>${esc(m.vehicle||'—')}</b></div><div class="row"><span>Estado</span><b>${m.driver_status==='approved'?'✅ Aprobado':esc(m.driver_status||'')}</b></div></div>
+ <button class="btn l" onclick="refreshPos()">📍 Actualizar mi ubicación</button><button class="btn l" onclick="inst()">📲 Instalar Nexora Driver</button>${supportHTML()}<button class="btn l" onclick="logout()">Cerrar sesión</button>`}
+async function refreshPos(){try{S.pos=await getPos();await api.setProfile({last_lat:S.pos.lat,last_lng:S.pos.lng,last_seen:new Date().toISOString()});alert('Ubicación actualizada')}catch(e){alert('Activa el permiso de ubicación')}}
+function inst(){if(installEv){installEv.prompt();installEv=null}else alert('Abre el menú del navegador y elige "Agregar a pantalla de inicio" o "Instalar app".')}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+if(live)sb.auth.getSession().then(({data})=>{if(data.session)boot()});
+</script><div id="nxMode" style="display:none;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;background:#ffc233;color:#3a2e00;font:700 12px system-ui;padding:5px 14px;border-radius:20px;box-shadow:0 2px 10px #0004;pointer-events:none;white-space:nowrap"></div>
+<script>(function(){var e=document.getElementById('nxMode'),N=window.NEXORA||{},live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY);
+function t(){var m='';if(!live)m='⚠️ MODO EJEMPLO · datos falsos, no se guarda nada';else try{if(String(S.me.phone||'').indexOf('555000000')===0)m='🧪 CUENTA DE PRUEBA'}catch(x){}
+e.textContent=m;e.style.display=m?'block':'none'}t();setInterval(t,1500)})()</script>
+</body></html>

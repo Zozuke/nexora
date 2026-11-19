@@ -1,0 +1,277 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06281a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png">
+<title>Nexora</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--g:#22e07a;--g2:#0fb85c;--d:#06281a;--bg:#f4f8f5;--t:#10281d;--m:#6b7f74;--r:18px}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--t);min-height:100dvh}
+.scr{display:none;min-height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.scr.on{display:block;animation:in .3s}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+.logo{font-weight:900;letter-spacing:.14em;background:linear-gradient(90deg,#22e07a,#b6ff3c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{background:radial-gradient(circle at 30% 20%,#0d5a37,var(--d) 65%);color:#fff;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;padding:32px 24px;position:relative;overflow:hidden}
+.hero .logo{font-size:44px;text-align:center;margin-top:30px}
+.fl{position:absolute;font-size:34px;opacity:.85;animation:fl 6s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-16px) rotate(8deg)}}
+.slide{text-align:center;min-height:130px}.slide h2{font-size:26px;margin-bottom:8px}.slide p{color:#b8d9c6;line-height:1.4}
+.dots{display:flex;gap:6px;justify-content:center;margin:12px 0}.dots i{width:8px;height:8px;border-radius:9px;background:#ffffff40}.dots i.on{width:24px;background:var(--g)}
+.btn{display:block;width:100%;border:0;border-radius:var(--r);padding:16px;font-size:16px;font-weight:700;background:linear-gradient(90deg,var(--g),var(--g2));color:#042415;margin-top:10px;cursor:pointer}
+.btn.o{background:transparent;color:#fff;border:2px solid #ffffff55}.btn.l{background:#fff;color:var(--t);border:2px solid #dbe7df}.btn:disabled{opacity:.5}
+.demo{background:#ffd84a;color:#3a2e00}
+.pad{padding:20px}h1{font-size:26px;margin-bottom:6px}.sub{color:var(--m);margin-bottom:16px;line-height:1.4}
+input{width:100%;padding:15px;border:2px solid #dbe7df;border-radius:14px;font-size:16px;margin:6px 0;background:#fff}input:focus{outline:0;border-color:var(--g2)}
+.tabs{display:flex;background:#e3eee7;border-radius:14px;padding:4px;margin:14px 0}.tabs b{flex:1;text-align:center;padding:10px;border-radius:11px;font-size:14px;cursor:pointer;color:var(--m)}.tabs b.on{background:#fff;color:var(--t);box-shadow:0 2px 8px #0001}
+.card{background:#fff;border-radius:var(--r);padding:14px;margin:10px 0;box-shadow:0 2px 12px #0a3a2214;display:flex;gap:12px;align-items:center;cursor:pointer}
+.im{width:64px;height:64px;border-radius:14px;background:#e8f7ee;display:grid;place-items:center;font-size:32px;flex:none;overflow:hidden}.im img{width:100%;height:100%;object-fit:cover}
+.card h3{font-size:16px}.card p{font-size:13px;color:var(--m);margin-top:2px}
+.top{position:sticky;top:0;background:var(--bg);padding:14px 20px;display:flex;align-items:center;gap:10px;z-index:5}.top h2{flex:1;font-size:18px}
+.ic{border:0;background:#fff;width:40px;height:40px;border-radius:12px;font-size:18px;box-shadow:0 2px 8px #0001;cursor:pointer}
+.ban{display:flex;gap:10px;overflow-x:auto;padding:0 20px 8px;scrollbar-width:none}.ban div{min-width:240px;background:linear-gradient(120deg,var(--d),#0d6b40);color:#fff;border-radius:var(--r);padding:16px}.ban b{color:var(--g)}.ban p{font-size:13px;color:#c4e6d2;margin-top:4px}
+.q{display:flex;align-items:center;gap:8px;margin-left:auto}.q button{width:34px;height:34px;border-radius:10px;border:0;background:var(--g);font-weight:900;font-size:18px}.q button.m{background:#e3eee7}
+.bar{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
+.row{display:flex;justify-content:space-between;padding:8px 0}.tot{font-size:20px;font-weight:800;border-top:2px dashed #cfe0d5;margin-top:6px;padding-top:12px}
+.note{background:#fff8d6;border-radius:14px;padding:12px;font-size:13px;margin:12px 0}.off{opacity:.55}
+.err{color:#c0392b;font-size:14px;min-height:20px}
+#nav{position:fixed;left:0;right:0;bottom:0;display:none;background:#fff;border-top:1px solid #dbe7df;padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:9}
+#nav button{flex:1;border:0;background:none;font-size:11px;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}#nav button span{font-size:22px}#nav button.on{color:var(--g2);font-weight:700}
+#s-comm,#s-promos,#s-orders,#s-order,#s-acct{padding-bottom:90px}
+.step{display:flex;gap:6px;margin:14px 0}.step i{flex:1;height:6px;border-radius:6px;background:#dbe7df}.step i.on{background:var(--g2)}
+.bub{max-width:80%;padding:10px 14px;border-radius:16px;background:#fff;margin:6px 0;box-shadow:0 1px 6px #0001;word-wrap:break-word}.bub.me{background:var(--g);margin-left:auto}
+.chat{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #dbe7df}.chat input{margin:0}.chat button{width:52px;border:0;border-radius:14px;background:var(--g);font-size:20px}
+a.btn{text-decoration:none;text-align:center}.pro{background:linear-gradient(120deg,var(--d),#0d6b40);color:#fff;border-radius:var(--r);padding:20px;margin:10px 0}.pro h3{color:var(--g)}.pro p{color:#c4e6d2;margin-top:6px;font-size:14px}
+.pill{display:inline-block;background:#e8f7ee;color:var(--g2);font-weight:700;border-radius:20px;padding:4px 12px;font-size:13px}
+.feeBan{margin:0 20px 8px;background:#e8f7ee;border:1px solid #bfe8cf;border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.35}.feeBan:empty{display:none}.feeBan small{display:block;color:var(--m);font-size:12px;margin-top:2px}.feeBan.st{position:sticky;top:68px;z-index:4}
+.sf{font-size:12px;color:var(--g2);font-weight:700;margin-top:3px}
+.q button.rm{width:auto;padding:0 12px;background:#fdeaea;color:#c0392b;font-size:13px;font-weight:700}
+.paid{background:#d9f7e4;border:2px solid var(--g2);color:#0a5a2e;border-radius:14px;padding:14px;margin:12px 0;font-size:15px;text-align:center;line-height:1.4}
+.fnote{font-size:12px;color:var(--m);line-height:1.4;margin:-2px 0 6px}
+#thanks{display:none;position:fixed;inset:0;background:#000a;z-index:99998;place-items:center;padding:24px}#thanks.on{display:grid}#thanks>div{background:#fff;border-radius:24px;padding:28px;text-align:center;max-width:340px}
+</style></head><body>
+
+<section class="scr on" id="s-welcome"><div class="hero">
+ <span class="fl" style="top:12%;left:10%">🥑</span><span class="fl" style="top:20%;right:12%;animation-delay:1s">🛵</span>
+ <span class="fl" style="top:36%;left:18%;animation-delay:2s">🍞</span><span class="fl" style="top:32%;right:20%;animation-delay:3s">🥩</span>
+ <div class="logo">NEXORA</div>
+ <div><div class="slide" id="sl"></div><div class="dots" id="dots"></div>
+ <button class="btn" onclick="go('auth','reg')">Comenzar</button>
+ <button class="btn o" onclick="go('auth','log')">Ya tengo cuenta</button>
+ <button class="btn demo" id="demoBtn" style="display:none" onclick="demo()">🧪 Entrar en modo prueba</button></div>
+</div></section>
+
+<section class="scr" id="s-auth"><div class="pad">
+ <div class="logo" style="font-size:28px;margin:16px 0">NEXORA</div>
+ <div class="tabs"><b id="tReg" onclick="mode('reg')">Registrarme</b><b id="tLog" onclick="mode('log')">Entrar</b></div>
+ <div id="nameBox"><input id="name" placeholder="Nombre completo" autocomplete="name"></div>
+ <input id="email" type="email" inputmode="email" placeholder="Correo electrónico" autocomplete="email" autocapitalize="none">
+ <div id="phBox"><input id="phone" type="tel" inputmode="numeric" placeholder="Número de teléfono (10 dígitos)" autocomplete="tel"></div>
+ <input id="pin" type="password" placeholder="Contraseña (mínimo 6 caracteres)">
+ <div class="err" id="err"></div><button class="btn" id="authBtn" onclick="auth()">Continuar</button>
+ <button class="btn l" onclick="go('welcome')">Atrás</button>
+</div></section>
+
+<section class="scr" id="s-loc"><div class="pad" style="text-align:center;padding-top:60px">
+ <div style="font-size:70px">🏠</div><h1>¿Dónde recibirás tus pedidos?</h1>
+ <p class="sub">Para que el repartidor llegue bien, <b>párate dentro de tu casa</b> y toca el botón. Guardaremos esa ubicación como tu dirección de entrega.</p>
+ <input id="homeComm" placeholder="¿Cómo se llama tu comunidad? (ej. Totomoxtla)" style="margin-bottom:6px"><div class="err" id="locErr"></div><button class="btn" onclick="saveLoc()">📍 Estoy en mi casa, enviar ubicación</button>
+</div></section>
+
+<section class="scr" id="s-comm"><div class="top"><h2>¿Dónde quieres comprar?</h2></div>
+ <div class="pad" style="padding-top:0"><p class="sub" id="hello"></p><div id="commList"></div></div></section>
+
+<section class="scr" id="s-stores"><div class="top"><button class="ic" onclick="go('comm')">←</button><h2 id="stTitle"></h2></div>
+ <div class="ban" id="ban"></div><div class="pad" style="padding-top:6px" id="storeList"></div></section>
+
+<section class="scr" id="s-store"><div class="top"><button class="ic" onclick="go('stores')">←</button><h2 id="spTitle"></h2><button class="ic" onclick="openCart()">🛒<small id="cc"></small></button></div>
+ <div class="feeBan st" id="feeStore"></div><div class="pad" style="padding-top:0;padding-bottom:100px" id="prodList"></div>
+ <div class="bar"><button class="btn" onclick="openCart()" id="cartBtn">Ver carrito</button></div></section>
+
+<section class="scr" id="s-cart"><div class="top"><button class="ic" onclick="go('store')">←</button><h2>Tu carrito</h2></div>
+ <div class="pad" style="padding-top:0;padding-bottom:110px"><div id="cartList"></div><div id="sum"></div>
+ <div class="note" id="payNote"></div><div class="err" id="cartErr"></div></div>
+ <div class="bar"><button class="btn" id="payBtn" onclick="pay()">Pedir y pagar en efectivo</button></div></section>
+
+<section class="scr" id="s-done"><div class="pad" style="text-align:center;padding-top:80px"><div style="font-size:80px">🎉</div>
+ <h1>¡Pedido enviado!</h1><p class="sub" id="doneTxt"></p><button class="btn" onclick="openOrders()">Ver mi pedido</button><button class="btn l" onclick="go('comm')">Seguir comprando</button></div></section>
+
+<section class="scr" id="s-promos"><div class="top"><h2>🔥 Ofertas y promociones</h2></div><div class="pad" style="padding-top:0" id="promoList"></div></section>
+<section class="scr" id="s-orders"><div class="top"><h2>Mis pedidos</h2></div><div class="pad" style="padding-top:0" id="ordList"></div></section>
+<section class="scr" id="s-order"><div class="top"><button class="ic" onclick="openOrders()">←</button><h2 id="odTitle"></h2></div><div class="pad" style="padding-top:0" id="odBody"></div></section>
+<section class="scr" id="s-chat"><div class="top"><button class="ic" onclick="openOrder(S.cur)">←</button><h2 id="chTitle"></h2></div>
+ <div class="pad" style="padding-top:0;padding-bottom:90px" id="chList"></div>
+ <div class="chat"><input id="chIn" placeholder="Escribe un mensaje…" maxlength="500" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()">➤</button></div></section>
+<section class="scr" id="s-acct"><div class="top"><h2>Mi cuenta</h2></div><div class="pad" style="padding-top:0" id="acBody"></div></section>
+<div id="thanks"><div><div style="font-size:70px">✅</div><h1>¡Pagado!</h1><p class="sub" id="thTxt"></p><button class="btn" onclick="$('thanks').classList.remove('on')">Cerrar</button></div></div>
+<nav id="nav"><button data-t="comm" onclick="tab('comm')"><span>🛍️</span>Comprar</button><button data-t="promos" onclick="tab('promos')"><span>🔥</span>Ofertas</button><button data-t="orders" onclick="tab('orders')"><span>📦</span>Pedidos</button><button data-t="acct" onclick="tab('acct')"><span>👤</span>Cuenta</button></nav>
+
+<script>
+const $=id=>document.getElementById(id),N=window.NEXORA,money=n=>'$'+(+n).toFixed(2).replace(/\.00$/,'');
+const live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY),sb=live?supabase.createClient(N.SUPABASE_URL,N.SUPABASE_ANON_KEY):null;
+let S={me:null,home:null,comm:null,store:null,cart:{},isDemo:false,cfg:{delivery_min:15,delivery_per_km:20,card_enabled:false}};
+if(N.DEMO)$('demoBtn').style.display='block';
+// ---------- datos demo ----------
+const DS=[{id:'s1',name:'Verdulería Doña Mary',community:'Cuautempan',description:'Frutas y verduras frescas todos los días',emoji:'🥬',lat:19.9,lng:-98.2},
+{id:'s2',name:'Carnicería El Güero',community:'Cuautempan',description:'Carne de res, puerco y pollo',emoji:'🥩',lat:19.901,lng:-98.198},
+{id:'s3',name:'Abarrotes Lupita',community:'Tetela',description:'Todo para tu despensa',emoji:'🛒',lat:19.93,lng:-98.15},
+{id:'s4',name:'Panadería La Espiga',community:'Totomoxtla',description:'Pan recién horneado',emoji:'🍞',lat:19.95,lng:-98.1}];
+const DP={s1:[['Jitomate','kilo',16,'🍅'],['Aguacate','kilo',62,'🥑'],['Cebolla','kilo',24,'🧅'],['Cilantro','montón',4,'🌿']],
+s2:[['Bistec de res','kilo',187,'🥩'],['Pollo entero','pieza',129,'🍗']],s3:[['Aceite 1L','pieza',38,'🫒'],['Arroz','kilo',27,'🍚']],s4:[['Bolillo','pieza',3,'🥖'],['Concha','pieza',9,'🥐']]};
+const DB=[{title:'🔥 Envío a mitad de precio',body:'Este fin de semana en Cuautempan'},{title:'🥑 Aguacate de temporada',body:'Pídelo en Doña Mary'}];
+// ---------- capa de datos ----------
+const api={
+ async comms(){return live?(await sb.from('communities').select('name').order('name')).data.map(x=>x.name):[...new Set(DS.map(s=>s.community))]},
+ async stores(c){return live?(await sb.from('stores').select('id,name,description,image_url,lat,lng').eq('community',c).eq('active',true)).data:DS.filter(s=>s.community===c)},
+ async prods(id){if(live)return (await sb.from('products_public').select('*').eq('store_id',id)).data;return DP[id].map((p,i)=>({id:id+i,store_id:id,name:p[0],unit:p[1],price:p[2],emoji:p[3]}))},
+ async banners(){return live?(await sb.from('banners').select('title,body').eq('active',true)).data:DB},
+ async settings(){if(!live)return;const{data}=await sb.from('public_settings').select('*');(data||[]).forEach(r=>S.cfg[r.key]=r.value)},
+ async km(st){ // distancia POR CALLES (nunca en línea recta)
+  if(!S.home)return null;
+  if(S.isDemo&&!navigator.onLine)return 2.4;
+  try{const r=await fetch(`${N.ROUTE_API}?inicio=${st.lng},${st.lat}&fin=${S.home.lng},${S.home.lat}`);const d=await r.json();
+   const m=d.features[0].properties.summary?.distance||d.features[0].properties.segments.reduce((a,s)=>a+s.distance,0);return m>0?m/1000:null}
+  catch(e){return S.isDemo?+(1.2+Math.abs(st.lat*7%3)).toFixed(1):null}}
+};
+// ---------- navegación ----------
+function go(id,m){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));$('s-'+id).classList.add('on');scrollTo(0,0);if(m)mode(m);
+ const NM={comm:'comm',promos:'promos',orders:'orders',order:'orders',acct:'acct'};$('nav').style.display=NM[id]?'flex':'none';
+ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===NM[id]));
+ if(id==='comm')loadComms();}
+const SL=[['Todo tu pueblo en tu bolsillo','Compra en las tiendas de tu comunidad sin salir de casa.'],['Un repartidor, varias tiendas','Pide de dos o tres negocios en un solo envío.'],['Paga en efectivo al recibir','Sencillo, seguro y sin complicaciones.']];let si=0;
+function slide(){$('sl').innerHTML=`<h2>${SL[si][0]}</h2><p>${SL[si][1]}</p>`;$('dots').innerHTML=SL.map((_,i)=>`<i class="${i===si?'on':''}"></i>`).join('');si=(si+1)%SL.length}slide();setInterval(slide,3500);
+let M='reg';function mode(m){M=m;$('nameBox').style.display=m==='reg'?'block':'none';$('phBox').style.display=m==='reg'?'block':'none';$('tReg').className=m==='reg'?'on':'';$('tLog').className=m==='log'?'on':'';$('err').textContent=''}
+// ---------- cuenta ----------
+const email=p=>p+'@nexora.app';
+async function auth(){const ph=$('phone').value.replace(/\D/g,''),pw=$('pin').value,nm=$('name').value.trim();$('err').textContent='';
+ const em=$('email').value.trim().toLowerCase();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return $('err').textContent='Escribe un correo electrónico válido';
+ if(M==='reg'&&ph.length!==10)return $('err').textContent='Escribe tu número de teléfono de 10 dígitos';
+ if(pw.length<6)return $('err').textContent='La contraseña debe tener al menos 6 caracteres';
+ if(M==='reg'&&nm.split(' ').length<2)return $('err').textContent='Escribe tu nombre completo';
+ if(!live)return $('err').textContent='Falta conectar Supabase en config.js (o usa el modo demo)';
+ $('authBtn').disabled=true;
+ let r=M==='reg'?await sb.auth.signUp({email:em,password:pw,options:{data:{phone:ph,full_name:nm,role:'client'}}}):await sb.auth.signInWithPassword({email:em,password:pw});
+ $('authBtn').disabled=false;if(r.error)return $('err').textContent=(r.error.message.includes('already')||r.error.message.includes('Database error'))?'Ese correo o teléfono ya está registrado':(M==='reg'?'No se pudo crear la cuenta. Revisa tus datos':'Correo o contraseña incorrectos');
+ if(!r.data.session)return $('err').textContent='Activa el acceso sin confirmar correo en Supabase (ver README)';
+ await boot()}
+async function boot(){await api.settings();realtime();if(live)api.orders().then(watchOrders).catch(()=>{});
+ if(live){const{data:u}=await sb.auth.getUser();const{data:p}=await sb.from('profiles').select('*').eq('id',u.user.id).single();S.me=p;
+  if(p.home_lat)S.home={lat:p.home_lat,lng:p.home_lng}}
+ S.me&&S.home?go('comm'):go('loc')}
+async function testLogin(){const t=N.TEST,e=t.client+'@nexora.app';
+ let r=await sb.auth.signInWithPassword({email:e,password:t.pass});
+ if(r.error)r=await sb.auth.signUp({email:e,password:t.pass,options:{data:{phone:t.client,full_name:'Cliente Prueba',role:'client'}}});
+ if(r.error||!r.data.session){alert('No se pudo entrar con la cuenta de prueba. Revisa que "Confirm email" esté desactivado en Supabase.');return false}return true}
+async function demo(){S.isDemo=true;
+ if(live){if(await testLogin())await boot();return}
+ LS={};S.me={full_name:'Cliente Demo'};S.home=JSON.parse(localStorage.getItem('nx_home')||'null');api.settings();S.home?go('comm'):go('loc')}
+async function logout(){if(live)await sb.auth.signOut();LS=null;S={...S,me:null,home:null,cart:{},isDemo:false,kmc:{},fq:{}};go('welcome')}
+function saveLoc(){const hc=$('homeComm').value.trim();if(hc.length<3)return $('locErr').textContent='Escribe el nombre de tu comunidad';$('locErr').textContent='Obteniendo ubicación…';
+ navigator.geolocation.getCurrentPosition(async p=>{S.home={lat:p.coords.latitude,lng:p.coords.longitude};S.kmc={};S.fq={};
+  if(live)await sb.from('profiles').update({home_lat:S.home.lat,home_lng:S.home.lng,community:hc}).eq('id',S.me.id);else localStorage.setItem('nx_home',JSON.stringify(S.home));go('comm')},
+ ()=>{if(S.isDemo){S.home={lat:19.905,lng:-98.195};go('comm')}else $('locErr').textContent='Activa el permiso de ubicación para continuar'},{enableHighAccuracy:true,timeout:15000})}
+// ---------- compra ----------
+async function loadComms(){$('hello').textContent='Hola, '+(S.me?.full_name||'').split(' ')[0]+' 👋 Elige tu comunidad';
+ const c=await api.comms();$('commList').innerHTML=c.length?c.map(x=>`<div class="card" onclick="openComm(this.dataset.c)" data-c="${esc(x)}"><div class="im">📍</div><div><h3>${esc(x)}</h3><p>Ver tiendas disponibles</p></div></div>`).join(''):'<p class="sub">Aún no hay comunidades disponibles.</p>'}
+async function openComm(c){S.comm=c;$('stTitle').textContent=c;go('stores');
+ const[st,b]=await Promise.all([api.stores(c),api.banners()]);S.stores=st;
+ $('ban').innerHTML=b.map(x=>`<div><b>${esc(x.title)}</b><p>${esc(x.body||'')}</p></div>`).join('');
+ $('storeList').innerHTML=st.length?st.map(s=>`<div class="card" onclick="openStore('${s.id}')"><div class="im">${s.image_url?`<img src="${esc(s.image_url)}">`:s.emoji||'🏪'}</div><div><h3>${esc(s.name)}</h3><p>${esc(s.description||'')}</p><div class="sf" id="sf-${s.id}"></div></div></div>`).join(''):'<p class="sub">No hay tiendas en esta comunidad todavía.</p>';
+ st.forEach(s=>feeFor([s]).then(f=>{const e=$('sf-'+s.id);if(e)e.textContent=f?'🛵 Envío a tu casa: '+money(f.fee):''}))}
+async function openStore(id){S.store=S.stores.find(s=>s.id===id);$('spTitle').textContent=S.store.name;go('store');
+ const p=await api.prods(id);S.prods=Object.assign(S.prods||{},Object.fromEntries(p.map(x=>[x.id,{...x,store:S.store}])));
+ $('prodList').innerHTML=p.map(x=>`<div class="card" style="cursor:default"><div class="im">${x.image_url?`<img src="${esc(x.image_url)}">`:x.emoji||'📦'}</div><div><h3>${esc(x.name)}</h3><p>${money(x.price)} por ${esc(x.unit)}</p></div>
+  <div class="q"><button class="m" onclick="chg('${x.id}',-1)">−</button><b id="q${x.id}">${S.cart[x.id]||0}</b><button onclick="chg('${x.id}',1)">+</button></div></div>`).join('');cartUI();feeChip('feeStore',S.store)}
+const step=p=>/kilo|kg/i.test(p.unit)?0.5:1;
+function chg(id,d){const p=S.prods[id],q=Math.max(0,(S.cart[id]||0)+d*step(p));q?S.cart[id]=q:delete S.cart[id];const e=$('q'+id);if(e)e.textContent=S.cart[id]||0;cartUI()}
+function cartUI(){const n=Object.keys(S.cart).length;$('cc').textContent=n?' '+n:'';$('cartBtn').textContent=n?`Ver carrito (${n})`:'Ver carrito';if(S.store&&$('s-store').classList.contains('on'))feeChip('feeStore',S.store)}
+// --- envío: cálculo con caché (el precio se muestra siempre, desde que eliges tienda) ---
+S.kmc={};S.fq={};
+async function kmOf(st){if(S.kmc[st.id]===undefined)S.kmc[st.id]=api.km(st);const k=await S.kmc[st.id];if(k==null)delete S.kmc[st.id];return k}
+async function feeFor(stores){const kms=await Promise.all(stores.map(kmOf));if(!kms.length||kms.some(k=>k==null))return null;
+ const km=Math.max(...kms);let fee=Math.max(+S.cfg.delivery_min,Math.round(km*S.cfg.delivery_per_km));
+ if(live){const key=km.toFixed(3);if(S.fq[key]==null){const q=await sb.rpc('quote_fee',{p_km:km});if(!q.error&&q.data!=null)S.fq[key]=+q.data}if(S.fq[key]!=null)fee=S.fq[key]}
+ return{km,fee,n:stores.length}}
+const cartStores=()=>[...new Map(Object.keys(S.cart).map(i=>[S.prods[i].store.id,S.prods[i].store])).values()];
+async function feeChip(id,extra){const e=$(id);if(!e)return;const m=new Map();cartStores().forEach(s=>m.set(s.id,s));if(extra)m.set(extra.id,extra);
+ const stores=[...m.values()],f=await feeFor(stores);if(!$(id))return;
+ e.innerHTML=f?`🛵 <b>Envío a tu casa: ${money(f.fee)}</b><small>${stores.length>1?'Es lo que cobra el repartidor por traerte todo tu mandado. Se calcula con la tienda más lejana de tu casa.':'Es lo que cobra el repartidor por traerte tu mandado desde esta tienda.'}</small>`:'';
+ const n=Object.keys(S.cart).length;if(f&&n&&id==='feeStore')$('cartBtn').textContent=`Ver carrito (${n}) · Envío ${money(f.fee)}`}
+// --- carrito: se puede quitar o cambiar cada producto ---
+function cchg(id,d){chg(id,d);renderCart()}
+function cdel(id){delete S.cart[id];const e=$('q'+id);if(e)e.textContent=0;cartUI();renderCart()}
+async function openCart(){go('cart');await renderCart()}
+async function renderCart(){const ids=Object.keys(S.cart);$('cartErr').textContent='';
+ if(!ids.length){$('cartList').innerHTML='<p class="sub">Tu carrito está vacío.</p>';$('sum').innerHTML='';$('payNote').innerHTML='';$('payBtn').disabled=true;return}
+ $('cartList').innerHTML=ids.map(i=>{const p=S.prods[i];return`<div class="card" style="cursor:default;display:block"><div style="display:flex;gap:12px;align-items:center"><div class="im" style="width:52px;height:52px;font-size:26px">${p.emoji||'📦'}</div><div style="flex:1"><h3>${esc(p.name)}</h3><p>${esc(p.store.name)} · ${money(p.price)} por ${esc(p.unit)}</p></div><b>${money(S.cart[i]*p.price)}</b></div>
+ <div class="q" style="margin:10px 0 0;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><button class="m" onclick="cchg('${i}',-1)">−</button><b>${S.cart[i]} ${esc(p.unit)}</b><button onclick="cchg('${i}',1)">+</button></div><button class="rm" onclick="cdel('${i}')">🗑 Quitar</button></div></div>`}).join('');
+ const sub=ids.reduce((a,i)=>a+S.cart[i]*S.prods[i].price,0),stores=cartStores();
+ $('sum').innerHTML='<p class="sub">Calculando lo que cobra el repartidor…</p>';$('payBtn').disabled=true;
+ const f=await feeFor(stores);if(!Object.keys(S.cart).length)return;
+ if(!f){$('sum').innerHTML='';$('cartErr').textContent='No se pudo calcular la ruta. Revisa tu conexión e inténtalo de nuevo.';return}
+ S.km=f.km;S.fee=f.fee;S.sub=sub;
+ $('sum').innerHTML=`<div class="row"><span>Productos</span><b>${money(sub)}</b></div><div class="row"><span>🛵 El repartidor te cobra</span><b>${money(S.fee)}</b></div>
+ <p class="fnote">Es el pago del repartidor por traer tu mandado a tu casa${stores.length>1?' (pides en '+stores.length+' tiendas, un solo envío)':''}.</p>
+ <div class="row tot"><span>Total a pagar</span><span>${money(sub+S.fee)}</span></div>`;
+ $('payNote').innerHTML=`💵 Pagas en <b>efectivo</b> al repartidor cuando llegue: ${money(sub)} de productos + ${money(S.fee)} del repartidor.${S.cfg.card_enabled?'':'<br>💳 Pago con tarjeta: próximamente.'}`;$('payBtn').disabled=false}
+async function pay(){$('payBtn').disabled=true;let no;const snap=Object.entries(S.cart).map(([id,q])=>({name:S.prods[id].name,qty:q,price:S.prods[id].price,unit:S.prods[id].unit}));
+ if(live){const{data,error}=await sb.rpc('place_order',{p_items:Object.entries(S.cart).map(([id,qty])=>({id,qty})),p_km:S.km,p_lat:S.home.lat,p_lng:S.home.lng,p_note:null});
+  if(error){$('cartErr').textContent='No se pudo enviar el pedido. Inténtalo otra vez.';$('payBtn').disabled=false;return}no=data}
+ else no=demoOrder(snap);
+ $('doneTxt').textContent=`Pedido #${no} · Total ${money(S.sub+S.fee)} (productos ${money(S.sub)} + repartidor ${money(S.fee)}), en efectivo al recibir. Un repartidor lo tomará pronto.`;S.cart={};cartUI();go('done')}
+
+// ===== Pedidos, chat, soporte, promos y cuenta =====
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pid=n=>String(n).padStart(4,'0');
+const ST={new:['🔎','Buscando repartidor',0],accepted:['🛵','El repartidor va por tus productos',1],picked:['📦','Tu pedido va en camino',2],delivered:['✅','Entregado y pagado',3],cancelled:['✖️','Cancelado',-1]};
+const DO=[],DM={};let realtimeOn=false,installEv=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e});
+function tab(t){t==='comm'?go('comm'):t==='promos'?openPromos():t==='orders'?openOrders():openAcct()}
+function demoOrder(items){const o={id:'d'+Date.now(),no:Math.floor(1000+Math.random()*9000),status:'new',delivery_fee:S.fee,items_total:S.sub,created_at:new Date().toISOString(),driver_pid:null,items};DO.unshift(o);
+ [[6000,'accepted'],[16000,'picked'],[28000,'delivered']].forEach(([t,st])=>setTimeout(()=>{if(o.status==='cancelled')return;o.status=st;if(st==='accepted')o.driver_pid=2;refresh()},t));return o.no}
+Object.assign(api,{
+ async orders(){return live?(await sb.from('my_orders').select('*').order('created_at',{ascending:false})).data||[]:DO},
+ async items(id){if(!live)return(DO.find(o=>o.id===id)?.items||[]).map(i=>({name:i.name,qty:i.qty,customer_price:i.price}));return(await sb.from('order_items').select('name,qty,customer_price').eq('order_id',id)).data||[]},
+ async msgs(id){if(!live)return DM[id]||[];return((await sb.from('messages').select('*').eq('order_id',id).order('created_at')).data||[]).map(m=>({mine:m.sender_id===S.me.id,body:m.body}))},
+ async send(id,b){if(live)return sb.from('messages').insert({order_id:id,sender_id:S.me.id,body:b});
+  (DM[id]=DM[id]||[]).push({mine:true,body:b});setTimeout(()=>{DM[id].push({mine:false,body:['Voy en camino 🛵','Llego en unos 10 minutos','Listo, ya recogí tu pedido']["voy".length%3]});if($('s-chat').classList.contains('on'))loadChat()},1500)},
+ async cancel(id){if(live)await sb.rpc('cancel_order',{p_id:id});else{const o=DO.find(x=>x.id===id);if(o&&o.status==='new')o.status='cancelled'}}});
+function realtime(){if(!live||realtimeOn)return;realtimeOn=true;
+ sb.channel('nx-o').on('postgres_changes',{event:'*',schema:'public',table:'orders'},refresh).subscribe();
+ sb.channel('nx-m').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{if(p.new.order_id===S.cur&&$('s-chat').classList.contains('on'))loadChat()}).subscribe()}
+let LS=null;
+function watchOrders(o){const prev=LS;LS=Object.fromEntries(o.map(x=>[x.id,x.status]));if(!prev)return;
+ const nd=o.find(x=>x.status==='delivered'&&x.id in prev&&prev[x.id]!=='delivered');
+ if(nd){$('thTxt').innerHTML=`Pedido #${nd.no} · ${money(+nd.items_total+ +nd.delivery_fee)}<br>El repartidor ya marcó tu pedido como pagado. ¡Muchas gracias por tu compra! 💚`;$('thanks').classList.add('on');try{navigator.vibrate&&navigator.vibrate([150,80,150])}catch(e){}}}
+function refresh(){api.orders().then(watchOrders).catch(()=>{});if($('s-orders').classList.contains('on'))renderOrders();else if($('s-order').classList.contains('on'))renderOrder()}
+async function openPromos(){go('promos');const b=await api.banners();$('promoList').innerHTML=b.length?b.map(x=>`<div class="pro"><h3>${esc(x.title)}</h3><p>${esc(x.body||'')}</p></div>`).join(''):'<p class="sub">Pronto verás aquí ofertas y promociones de tu comunidad.</p>'}
+async function openOrders(){go('orders');await renderOrders()}
+async function renderOrders(){const o=S.orders=await api.orders();$('ordList').innerHTML=o.length?o.map(x=>`<div class="card" onclick="openOrder('${x.id}')"><div class="im">${ST[x.status][0]}</div><div><h3>Pedido #${x.no}</h3><p>${ST[x.status][1]}</p></div><b style="margin-left:auto">${money(+x.items_total+ +x.delivery_fee)}</b></div>`).join(''):'<p class="sub">Aún no has hecho pedidos. ¡Anímate a comprar!</p>'}
+async function openOrder(id){S.cur=id;go('order');await renderOrder()}
+async function renderOrder(){S.orders=await api.orders();const o=S.orders.find(x=>x.id===S.cur);if(!o)return;const it=await api.items(o.id),st=ST[o.status],tot=+o.items_total+ +o.delivery_fee;
+ $('odTitle').textContent='Pedido #'+o.no;
+ $('odBody').innerHTML=`<div class="card" style="cursor:default"><div class="im">${st[0]}</div><div><h3>${st[1]}</h3><p>${o.driver_pid?'Repartidor <b>'+pid(o.driver_pid)+'</b>':'Aún sin repartidor'}</p></div></div>
+ ${st[2]>=0?`<div class="step">${[0,1,2,3].map(i=>`<i class="${i<=st[2]?'on':''}"></i>`).join('')}</div>`:''}
+ <div class="card" style="cursor:default;display:block">${it.map(i=>`<div class="row"><span>${i.qty} × ${esc(i.name)}</span><b>${money(i.qty*i.customer_price)}</b></div>`).join('')}
+ <div class="row"><span>🛵 Repartidor (por traértelo a casa)</span><b>${money(o.delivery_fee)}</b></div><div class="row tot"><span>${o.status==='delivered'?'Total pagado':'Total a pagar'}</span><span>${money(tot)}</span></div></div>
+ ${o.status==='delivered'?`<div class="paid">✅ <b>Pagado · ¡Muchas gracias por tu compra!</b><br>El repartidor confirmó que recibió ${money(tot)}.</div>`:o.status==='cancelled'?'':`<div class="note">💵 Paga <b>${money(tot)}</b> en efectivo al repartidor cuando llegue (${money(tot-o.delivery_fee)} de productos + ${money(o.delivery_fee)} del repartidor).</div>`}
+ ${['accepted','picked'].includes(o.status)?`<button class="btn" onclick="openChat()">💬 Chatear con el repartidor ${pid(o.driver_pid)}</button>`:''}
+ ${o.status==='new'?`<button class="btn l" onclick="cancelOrd()">Cancelar pedido</button>`:''}${supportHTML()}`}
+async function cancelOrd(){if(!confirm('¿Cancelar este pedido?'))return;await api.cancel(S.cur);renderOrder()}
+function supportHTML(){const n=String(S.cfg.support_phone||'').replace(/\D/g,'');
+ return n?`<a class="btn l" href="tel:+${n}">📞 Llamar a soporte</a><a class="btn l" href="https://wa.me/${n}" target="_blank" rel="noopener">💬 Mensaje a soporte</a>`:`<div class="note">🛟 Soporte estará disponible muy pronto.</div>`}
+async function openChat(){const o=S.orders.find(x=>x.id===S.cur);$('chTitle').textContent='Repartidor '+pid(o.driver_pid);go('chat');await loadChat()}
+async function loadChat(){const m=await api.msgs(S.cur);$('chList').innerHTML=m.length?m.map(x=>`<div class="bub ${x.mine?'me':''}">${esc(x.body)}</div>`).join(''):'<p class="sub" style="text-align:center;margin-top:30px">Pregúntale si ya viene en camino, cuánto tarda o avísale cuando llegue 👋</p>';scrollTo(0,document.body.scrollHeight)}
+async function sendMsg(){const b=$('chIn').value.trim();if(!b)return;$('chIn').value='';await api.send(S.cur,b);loadChat()}
+function openAcct(){go('acct');const m=S.me||{};$('acBody').innerHTML=`<div class="card" style="cursor:default"><div class="im">👤</div><div><h3>${esc(m.full_name)}</h3><p>${esc(m.phone||'Modo demo')}</p>${m.public_id?`<span class="pill">Cliente ${pid(m.public_id)}</span>`:''}</div></div>
+ <button class="btn l" onclick="go('loc')">🏠 Actualizar la ubicación de mi casa</button>
+ <button class="btn l" onclick="inst()">📲 Instalar Nexora en mi teléfono</button>${supportHTML()}
+ <button class="btn l" onclick="logout()">Cerrar sesión</button>`}
+function inst(){if(installEv){installEv.prompt();installEv=null}else alert('Abre el menú del navegador y elige "Agregar a pantalla de inicio" o "Instalar app".')}
+
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+if(live)sb.auth.getSession().then(({data})=>{if(data.session)boot()});
+</script><div id="nxMode" style="display:none;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;background:#ffc233;color:#3a2e00;font:700 12px system-ui;padding:5px 14px;border-radius:20px;box-shadow:0 2px 10px #0004;pointer-events:none;white-space:nowrap"></div>
+<script>(function(){var e=document.getElementById('nxMode'),N=window.NEXORA||{},live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY);
+function t(){var m='';if(!live)m='⚠️ MODO EJEMPLO · datos falsos, no se guarda nada';else try{if(String(S.me.phone||'').indexOf('555000000')===0)m='🧪 CUENTA DE PRUEBA'}catch(x){}
+e.textContent=m;e.style.display=m?'block':'none'}t();setInterval(t,1500)})()</script>
+</body></html>

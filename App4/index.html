@@ -1,0 +1,507 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06281a"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png">
+<title>Nexora Admin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--g:#22e07a;--g2:#0fb85c;--d:#06281a;--d2:#0b3a26;--bg:#f2f7f4;--t:#10281d;--m:#6b7f74;--r:16px;--y:#ffc233;--red:#e0483a;--blue:#2f7bff;--line:#dbe7df}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;font-size:15px}
+button,input,select,textarea{font:inherit;color:inherit}
+.logo{font-weight:900;letter-spacing:.14em;background:linear-gradient(90deg,#22e07a,#b6ff3c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hide{display:none!important}
+/* ── login ── */
+#login{min-height:100dvh;display:grid;grid-template-columns:1.1fr 1fr}
+.lh{background:radial-gradient(circle at 70% 20%,#0d5a37,var(--d) 65%);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.lh .logo{font-size:56px}.lh .tag{color:var(--y);font-weight:800;letter-spacing:.3em;font-size:13px;margin:6px 0 26px}
+.lh ul{list-style:none;padding:0;color:#b8d9c6;line-height:2;font-size:16px}
+.fl{position:absolute;font-size:40px;opacity:.85;animation:fl 6s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-16px) rotate(8deg)}}
+.lc{display:flex;align-items:center;justify-content:center;padding:28px}.lc>div{width:100%;max-width:380px}
+.lc h1{font-size:26px;margin-bottom:4px}.sub{color:var(--m);margin-bottom:16px;line-height:1.4}
+/* ── controles ── */
+input,select,textarea{width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;margin:4px 0}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--g2)}input[type=checkbox]{width:auto;margin:0}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--m);margin-top:10px;text-transform:uppercase;letter-spacing:.04em}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:linear-gradient(90deg,var(--g),var(--g2));color:#042415;cursor:pointer;white-space:nowrap}
+.btn.l{background:#fff;color:var(--t);border:2px solid var(--line)}.btn.red{background:#fff;color:var(--red);border:2px solid #f2c4bf}.btn.y{background:var(--y);color:#3a2e00}.btn.d{background:var(--d);color:#fff}
+.btn.s{padding:6px 11px;font-size:13px;border-radius:10px}.btn:disabled{opacity:.5}.btn.w{width:100%;margin-top:12px;padding:14px}
+.err{color:var(--red);font-size:14px;min-height:20px;margin-top:6px}
+/* ── layout ── */
+#app{display:grid;grid-template-columns:250px 1fr;min-height:100dvh}
+aside{background:var(--d);color:#fff;position:sticky;top:0;height:100dvh;overflow:auto;padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+aside .logo{font-size:28px;padding:4px 10px 0}aside small{display:block;padding:0 10px 14px;color:#8fb8a1;letter-spacing:.2em;font-size:11px;font-weight:700}
+.nv{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:0;border-radius:12px;background:none;color:#cfe6d8;cursor:pointer;text-align:left;font-size:15px}
+.nv:hover{background:#ffffff14}.nv.on{background:linear-gradient(90deg,#22e07a33,#22e07a14);color:#fff;font-weight:700;box-shadow:inset 3px 0 0 var(--g)}
+.nv i{font-style:normal;font-size:18px;width:24px;text-align:center}.nv em{margin-left:auto;background:var(--red);color:#fff;font-style:normal;font-size:11px;font-weight:700;border-radius:10px;padding:2px 7px}
+.sp{flex:1}
+main{min-width:0}
+.top{position:sticky;top:0;z-index:20;background:#f2f7f4ee;backdrop-filter:blur(8px);padding:12px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line)}
+.top h2{font-size:20px;flex:1}.hb{display:none}
+.pill{display:inline-block;background:#e8f7ee;color:var(--g2);font-weight:700;border-radius:20px;padding:3px 11px;font-size:12px;white-space:nowrap}.pill.y{background:#fff1c9;color:#8a6200}.pill.r{background:#fde6e3;color:var(--red)}.pill.b{background:#e3edff;color:#1d56c9}.pill.g{background:#eaeeec;color:#5b6b63}
+#view{padding:22px 24px 60px;max-width:1280px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:16px}
+.g2{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-bottom:16px}
+.card{background:#fff;border-radius:var(--r);padding:16px;box-shadow:0 2px 12px #0a3a2212}
+.card h3{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}.card h3 small{margin-left:auto;font-weight:500;color:var(--m);font-size:12px}
+.kpi{position:relative;overflow:hidden}.kpi>small{display:block;padding-right:34px;color:var(--m);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}.kpi b small{color:var(--m);font-size:14px;font-weight:600}.kpi b{display:block;font-size:28px;margin-top:4px}.kpi span{position:absolute;right:12px;top:10px;font-size:26px;opacity:.9}
+.kpi.dark{background:linear-gradient(120deg,var(--d),#0d6b40);color:#fff}.kpi.dark small{color:#b8d9c6}.kpi.dark b{color:var(--g)}
+.al{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}.al button{border:0;border-radius:14px;padding:11px 14px;background:#fff8d6;color:#6b5200;font-weight:700;cursor:pointer;box-shadow:0 2px 10px #0001}.al button.r{background:#fde6e3;color:#8a2218}
+.tw{overflow:auto;border-radius:var(--r);background:#fff;box-shadow:0 2px 12px #0a3a2212}
+table{width:100%;border-collapse:collapse;font-size:14px}th{background:#eaf3ed;color:#4d6457;text-align:left;padding:10px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{padding:10px 12px;border-top:1px solid #edf3ef;vertical-align:middle}tr.c{cursor:pointer}tr.c:hover td{background:#f5fbf7}td.n,th.n{text-align:right;white-space:nowrap}
+.tb{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.tb input,.tb select{width:auto;min-width:200px;margin:0}
+.chip{padding:8px 14px;border-radius:20px;background:#fff;border:2px solid var(--line);font-weight:600;cursor:pointer;font-size:13px}.chip.on{background:var(--g);border-color:var(--g2)}
+.im{width:42px;height:42px;border-radius:11px;background:#e8f7ee;display:inline-grid;place-items:center;font-size:20px;overflow:hidden;vertical-align:middle}.im img{width:100%;height:100%;object-fit:cover}
+.mt{color:var(--m);font-size:13px}.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0}.row.t{font-weight:800;border-top:2px dashed #cfe0d5;margin-top:4px;padding-top:10px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#b5c2ba;margin-right:6px}.dot.on{background:var(--g2);box-shadow:0 0 0 4px #22e07a33}
+.ch{width:100%;height:auto}.ch text{font-size:11px;fill:var(--m)}
+.bar{margin:8px 0}.bar div{display:flex;justify-content:space-between;font-size:13px}.bar i{display:block;height:9px;border-radius:9px;background:linear-gradient(90deg,var(--g),var(--g2));margin-top:4px}
+.note{background:#fff8d6;border-radius:12px;padding:11px 13px;font-size:13px;margin:10px 0;line-height:1.45}.note.ok{background:#e4f8ec;color:#0b5a30}.note.bad{background:#fde6e3;color:#8a2218}
+.empty{text-align:center;color:var(--m);padding:40px 10px}.empty b{display:block;font-size:44px}
+.tg{width:54px;height:30px;border-radius:20px;background:#c9d6ce;position:relative;border:0;cursor:pointer;transition:.2s;flex:none}.tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px #0003}.tg.on{background:var(--g2)}.tg.on::after{left:27px}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #edf3ef}.sr:first-of-type{border-top:0}.sr>div{flex:1}.sr b{display:block;font-size:14px}.sr small{color:var(--m)}.sr input,.sr select{width:130px;flex:none;text-align:right}
+.ms{display:grid;gap:8px;grid-template-columns:1fr 1fr auto;margin:6px 0;align-items:center}.ms input,.ms select{margin:0}
+.pay{display:grid;gap:6px;grid-template-columns:120px 1fr 1.4fr auto;margin:6px 0;align-items:center}.pay input,.pay select{margin:0}
+.kyc{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kyc div{background:#eef4f0;border-radius:12px;padding:8px;text-align:center;font-size:12px;color:var(--m)}.kyc img{width:100%;max-height:260px;object-fit:contain;border-radius:8px;background:#fff;cursor:zoom-in}
+#map,#mapRef{height:520px;border-radius:var(--r);background:#dfe9e2;z-index:1}#mapRef{height:300px;margin:8px 0}
+.mk{color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px #0005}
+.chat{display:grid;grid-template-columns:300px 1fr;gap:14px}.chat .lst{max-height:70dvh;overflow:auto}.chat .li{padding:11px 12px;border-radius:12px;cursor:pointer;border:2px solid transparent}.chat .li:hover{background:#f5fbf7}.chat .li.on{border-color:var(--g2);background:#f0fbf5}
+.bub{max-width:78%;padding:9px 13px;border-radius:15px;background:#eef4f0;margin:6px 0;word-wrap:break-word}.bub.dr{background:#d9f5e5;margin-left:auto}.bub small{display:block;color:var(--m);font-size:11px;margin-bottom:2px}
+/* ── modal / toast ── */
+#md{position:fixed;inset:0;background:#06281a99;z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+#md>div{background:#fff;border-radius:20px;width:100%;max-width:640px;padding:20px;box-shadow:0 20px 60px #0006;animation:in .25s}#md.w>div{max-width:900px}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+.mh{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mh h3{flex:1;font-size:19px}.mh button{border:0;background:#eef4f0;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#ts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center}
+#ts div{background:var(--d);color:#fff;padding:11px 18px;border-radius:14px;box-shadow:0 6px 24px #0005;animation:in .25s;max-width:90vw}#ts div.bad{background:var(--red)}
+.spin{width:38px;height:38px;border:4px solid #cfe0d5;border-top-color:var(--g2);border-radius:50%;animation:sp .8s linear infinite;margin:60px auto}@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:860px){
+ #login{grid-template-columns:1fr}.lh{padding:28px;min-height:230px}.lh ul{display:none}.lh .logo{font-size:44px}
+ #app{grid-template-columns:1fr}aside{position:fixed;left:-270px;width:260px;z-index:60;transition:left .25s}aside.open{left:0;box-shadow:0 0 0 100vmax #0006}
+ .hb{display:block;border:0;background:#fff;width:40px;height:40px;border-radius:12px;font-size:20px;box-shadow:0 2px 8px #0001}.top{padding:10px 14px}#view{padding:16px 14px 60px}
+ .g2{grid-template-columns:1fr}.chat{grid-template-columns:1fr}.pay{grid-template-columns:1fr 1fr}.kyc{grid-template-columns:1fr}.tb input,.tb select{min-width:0;flex:1}
+}
+</style></head><body>
+
+<!-- ═════ LOGIN ═════ -->
+<section id="login">
+ <div class="lh"><span class="fl" style="top:10%;right:12%">📦</span><span class="fl" style="bottom:14%;right:22%;animation-delay:1.5s">🛵</span><span class="fl" style="top:44%;right:6%;animation-delay:3s">🏪</span>
+  <div class="logo">NEXORA</div><div class="tag">PANEL DE ADMINISTRACIÓN</div>
+  <ul><li>📊 Ventas, pedidos y ganancias en vivo</li><li>🛵 Aprueba repartidores y revisa su INE</li><li>💵 Controla depósitos y deudas</li><li>🏪 Tiendas, productos y precios</li><li>⚙️ Envíos, comisiones y tarjeta con un clic</li></ul></div>
+ <div class="lc"><div>
+  <h1>Entrar como administrador</h1><p class="sub">Solo cuentas con rol de administrador pueden entrar aquí.</p>
+  <label class="f">Correo electrónico</label><input id="lPh" type="email" inputmode="email" placeholder="tucorreo@ejemplo.com" autocomplete="username" autocapitalize="none">
+  <label class="f">Contraseña</label><input id="lPw" type="password" autocomplete="current-password" placeholder="••••••••">
+  <div class="err" id="lErr"></div>
+  <button class="btn w" id="lGo">Entrar</button>
+  <button class="btn y w hide" id="lDemo"></button>
+  <p class="mt" style="margin-top:16px;line-height:1.5" id="lHelp"></p>
+ </div></div>
+</section>
+
+<!-- ═════ APP ═════ -->
+<div id="app" class="hide">
+ <aside id="side"><div class="logo">NEXORA</div><small>ADMIN</small><div id="nav"></div><div class="sp"></div>
+  <button class="nv" onclick="logout()"><i>🚪</i>Cerrar sesión</button></aside>
+ <main><div class="top"><button class="hb" onclick="$('side').classList.toggle('open')">☰</button><h2 id="vt"></h2><span class="pill y hide" id="mockPill">Datos de ejemplo</span>
+  <button class="btn l s" onclick="refresh()">↻ Actualizar</button><span class="mt" id="who"></span></div>
+  <div id="view"></div></main>
+</div>
+<div id="md" class="hide" onclick="if(event.target===this)closeModal()"><div id="mdc"></div></div>
+<div id="ts"></div>
+
+<script>
+const N=window.NEXORA||{},live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY&&window.supabase),mock=!live;
+const sb=live?supabase.createClient(N.SUPABASE_URL,N.SUPABASE_ANON_KEY):null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'$'+Math.round(+n||0).toLocaleString('es-MX');
+const dt=d=>d?new Date(d).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+const pid=n=>n==null?'—':String(n).padStart(4,'0');
+const ST={new:['Nuevo','y'],accepted:['Aceptado','b'],picked:['Recogido','b'],delivered:['Entregado',''],cancelled:['Cancelado','r']};
+const stPill=s=>{const x=ST[s]||[s,'g'];return `<span class="pill ${x[1]}">${x[0]}</span>`};
+const DS={pending:['En revisión','y'],approved:['Aprobado',''],rejected:['Rechazado','r'],suspended:['Suspendido','r']};
+const dsPill=s=>{const x=DS[s]||['—','g'];return `<span class="pill ${x[1]}">${x[0]}</span>`};
+const ROLE={client:'Cliente',seller:'Vendedor',driver:'Repartidor',admin:'Admin'};
+const S={view:'dash',me:null,cfg:{},nav:{},days:14,of:{st:'all',q:''},df:'pending',sf:'all',uf:{r:'all',q:''},chatId:null};
+let ST_TIMER=null;
+function toast(m,bad){const e=document.createElement('div');if(bad)e.className='bad';e.textContent=m;$('ts').appendChild(e);setTimeout(()=>e.remove(),bad?5000:2600)}
+function openModal(t,h,wide){$('mdc').innerHTML=`<div class="mh"><h3>${t}</h3><button onclick="closeModal()">✕</button></div>${h}`;$('md').className=wide?'w':'';$('md').scrollTop=0}
+function closeModal(){$('md').className='hide';$('mdc').innerHTML=''}
+const tbl=(h,r,cls)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th class="${x[0]=='#'?'n':''}">${x.replace(/^#/,'')}</th>`).join('')}</tr></thead><tbody>${r.join('')||`<tr><td colspan="${h.length}"><div class="empty"><b>🗂️</b>No hay nada por aquí todavía</div></td></tr>`}</tbody></table></div>`;
+const img=(u,e)=>`<span class="im">${u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">`:''}${u?'':e||'🏪'}</span>`;
+const wa=p=>p?`<a href="https://wa.me/52${String(p).replace(/\D/g,'').slice(-10)}" target="_blank" rel="noopener" class="btn l s" style="text-decoration:none">💬 WhatsApp</a>`:'';
+const gmap=(a,b)=>a!=null&&b!=null?`<a href="https://www.google.com/maps?q=${a},${b}" target="_blank" rel="noopener" class="btn l s" style="text-decoration:none">📍 Ver ubicación</a>`:'';
+function csv(name,rows){const k=Object.keys(rows[0]||{});const t=[k.join(',')].concat(rows.map(r=>k.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+t],{type:'text/csv'}));a.download=name;a.click()}
+const hav=(a,b,c,d)=>{const R=Math.PI/180,x=Math.sin((c-a)*R/2)**2+Math.cos(a*R)*Math.cos(c*R)*Math.sin((d-b)*R/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+
+// ═══ Cálculo de envío (igual que calc_fee del SQL; sirve para el simulador y los datos de ejemplo) ═══
+function feeFor(km,c,mode){mode=mode||c.delivery_mode;let f=0;
+ if(mode==='tiered'){let lo=0;for(const t of [...c.delivery_tiers].sort((a,b)=>a.upto-b.upto)){if(km<=lo)break;f+=(Math.min(km,t.upto)-lo)*t.per_km;lo=t.upto}}
+ else if(mode==='reference'){const r=c.ref_point||{};f=(r.km>0&&r.price>0)?km*r.price/r.km:km*c.delivery_per_km}
+ else f=km*c.delivery_per_km;
+ return Math.max(+c.delivery_min,Math.round(f))}
+const custPrice=(p,m,c)=>p<c.markup_min_price?p:p+(m==null?c.markup_default:+m);
+const CFG0={markup_default:2,markup_min_price:5,delivery_mode:'per_km',delivery_min:15,delivery_per_km:20,delivery_tiers:[{upto:3,per_km:20},{upto:8,per_km:15},{upto:999,per_km:10}],
+ ref_point:{lat:null,lng:null,km:null,price:null},platform_pct:20,card_enabled:false,support_phone:'',auto_approve_stores:true,auto_approve_drivers:false,auto_confirm_settlements:false,
+ trust_pending:true,driver_radius_km:40,driver_max_active:2,debt_limit:1500,settle_cutoff_hour:5,pay_methods:[]};
+
+// ═══ DATOS DE EJEMPLO (solo cuando no hay Supabase conectado) ═══
+let D=null;
+function mkDemo(){
+ const now=Date.now(),H=36e5,cfg={...CFG0,support_phone:'5215512345678',pay_methods:[{type:'transfer',label:'Transferencia',detail:'CLABE 0123 4567 8901 2345 67'},{type:'oxxo',label:'Tienda',detail:'Tarjeta 4000 1234 5678 9010'}]};
+ let nid=1,uid=()=>'id'+(nid++),pub=1000;
+ const U=(role,name,phone,com,x={})=>({id:uid(),public_id:++pub,phone,full_name:name,role,community:com,driver_status:null,blocked:false,online:false,created_at:new Date(now-Math.random()*40*24*H).toISOString(),...x});
+ const users=[U('admin','Admin Prueba','5550000004',null),
+  U('client','Anita Vásquez López','2311000001','Cuautempan'),U('client','Luis Hernández','2311000002','Tetela'),U('client','María Cruz','2311000003','Totomoxtla'),U('client','Pedro Ramírez','2311000004','Cuautempan'),U('client','Rosa Martínez','2311000005','Tetela'),
+  U('seller','Don Chucho','2311000010','Cuautempan'),U('seller','Carnicería Lupita','2311000011','Tetela'),U('seller','Abarrotes Mary','2311000012','Totomoxtla'),U('seller','Tienda Nueva','2311000013','Tetela'),
+  U('driver','Carlos Pérez','2311000020','Cuautempan',{driver_status:'approved',vehicle:'Moto',online:true,last_lat:19.936,last_lng:-97.642,last_seen:new Date().toISOString(),ine_path:'x',face_path:'x'}),
+  U('driver','Juan Torres','2311000021','Tetela',{driver_status:'approved',vehicle:'Moto',online:true,last_lat:19.915,last_lng:-97.61,last_seen:new Date().toISOString(),ine_path:'x',face_path:'x'}),
+  U('driver','Miguel Soto','2311000022','Totomoxtla',{driver_status:'approved',vehicle:'Bicicleta',ine_path:'x',face_path:'x'}),
+  U('driver','Pablo Díaz','2311000023','Tetela',{driver_status:'pending',vehicle:'Moto',ine_path:'x',face_path:'x'}),
+  U('driver','Jorge Luna','2311000024','Cuautempan',{driver_status:'pending',vehicle:'Auto',ine_path:'x',face_path:'x'})];
+ const byPh=p=>users.find(u=>u.phone===p);
+ const stores=[['Verdulería Don Chucho','Cuautempan','Frutas y verduras frescas del día','2311000010',19.934,-97.645,1],['Carnicería Lupita','Tetela','Carne de res, cerdo y pollo','2311000011',19.917,-97.612,1],['Abarrotes Mary','Totomoxtla','De todo para tu casa','2311000012',19.95,-97.66,1],['Tienda Nueva','Tetela','Recién registrada, por aprobar','2311000013',19.92,-97.615,0]]
+  .map(a=>({id:uid(),name:a[0],community:a[1],description:a[2],image_url:null,owner:{full_name:byPh(a[3]).full_name,public_id:byPh(a[3]).public_id,phone:a[3]},lat:a[4],lng:a[5],accepts_cash:true,accepts_card:a[6]==1,active:true,approved:!!a[6],created_at:new Date(now-5*24*H).toISOString()}));
+ const P=(s,n,p,u,m)=>({id:uid(),store_id:stores[s].id,name:n,price:p,unit:u,markup:m??null,available:true,image_url:null});
+ const products=[P(0,'Jitomate',15,'kilo'),P(0,'Cebolla',18,'kilo'),P(0,'Aguacate',60,'kilo',3),P(0,'Cilantro',3,'manojo'),P(1,'Bistec de res',85,'kilo'),P(1,'Pollo entero',70,'pieza'),P(1,'Chorizo',90,'kilo',1),P(2,'Refresco 2L',32,'pieza'),P(2,'Huevo',48,'kilo'),P(2,'Tortillas',22,'kilo'),P(2,'Dulces',2,'montón'),P(3,'Pan de dulce',8,'pieza')];
+ const orders=[],items={},payouts={},messages=[],settlements=[],drv=users.filter(u=>u.role==='driver'&&u.driver_status==='approved'),cl=users.filter(u=>u.role==='client'),ok=stores.filter(s=>s.approved);
+ const plan=['new','new','accepted','picked','cancelled','cancelled',...Array(12).fill('delivered')];
+ plan.forEach((st,i)=>{const c=cl[i%cl.length],d=(st==='new')?null:drv[i%drv.length],ss=ok.slice(0,1+(i%3==0?1:0)).map((_,k)=>ok[(i+k)%ok.length]);
+  const km=+(1.2+Math.random()*7).toFixed(1),created=new Date(now-(st==='new'?Math.random()*2:Math.random()*10*24)*H-i*H/3).toISOString(),it=[];
+  ss.forEach(s=>{products.filter(p=>p.store_id===s.id).slice(0,2).forEach(p=>it.push({store_id:s.id,name:p.name,unit:p.unit,qty:1+(i%3),unit_price:p.price,customer_price:custPrice(p.price,p.markup,cfg)}))});
+  const total=it.reduce((a,x)=>a+x.qty*x.customer_price,0),mk=it.reduce((a,x)=>a+x.qty*(x.customer_price-x.unit_price),0),fee=feeFor(km,cfg),cut=Math.round(fee*cfg.platform_pct/100),o={id:uid(),public_no:2001+i,status:st,delivery_fee:fee,items_total:total,km,stores_n:ss.length,markup_total:mk,dest_community:c.community,created_at:created,lat:19.93,lng:-97.64,note:i%4==0?'Tocar el portón azul':null,
+   client:{full_name:c.full_name,public_id:c.public_id,phone:c.phone},driver:d?{full_name:d.full_name,public_id:d.public_id,phone:d.phone}:null,driver_id:d?d.id:null,client_id:c.id};
+  if(st==='delivered'){const card=ss.reduce((a,s)=>a+(s.accepts_card&&i%5==0?it.filter(x=>x.store_id===s.id).reduce((q,x)=>q+x.qty*x.unit_price,0):0),0);Object.assign(o,{platform_cut:cut,driver_earn:fee-cut,driver_due:card+mk+cut,delivered_at:created})}
+  orders.push(o);items[o.id]=it;payouts[o.id]=ss.map(s=>({store_id:s.id,store:{name:s.name},amount:it.filter(x=>x.store_id===s.id).reduce((a,x)=>a+x.qty*x.unit_price,0),method:'cash',status:st==='delivered'?'paid':'pending',picked:['picked','delivered'].includes(st)}));
+  if(st==='delivered'&&i%5==0){const p=payouts[o.id][0];p.method='card';p.status='pending'}
+  if(i===3){[['c','¿Ya vienes en camino?'],['d','Sí, voy saliendo de la verdulería'],['c','Gracias, aquí te espero']].forEach((m,k)=>messages.push({id:uid(),order_id:o.id,order:{public_no:o.public_no,status:st},sender:{full_name:m[0]=='c'?c.full_name:d.full_name,role:m[0]=='c'?'client':'driver',public_id:m[0]=='c'?c.public_id:d.public_id},sender_id:m[0]=='c'?c.id:d.id,driver_side:m[0]=='d',body:m[1],created_at:new Date(now-(30-k*8)*6e4).toISOString()}))}});
+ const bal={};orders.filter(o=>o.status==='delivered').forEach(o=>bal[o.driver_id]=(bal[o.driver_id]||0)+o.driver_due);
+ const worst=Object.entries(bal).sort((a,b)=>b[1]-a[1])[0];
+ if(worst)settlements.push({id:uid(),driver:{full_name:users.find(u=>u.id===worst[0]).full_name,public_id:users.find(u=>u.id===worst[0]).public_id,phone:'x'},driver_id:worst[0],amount:Math.max(10,Math.round(worst[1]/2)),method:'transfer',reference:'SPEI 8842211',proof_path:'x',status:'pending',created_at:new Date(now-2*H).toISOString()});
+ if(drv[1])settlements.push({id:uid(),driver:{full_name:drv[1].full_name,public_id:drv[1].public_id,phone:'x'},driver_id:drv[1].id,amount:120,method:'oxxo',reference:'Folio 55120',proof_path:null,status:'confirmed',created_at:new Date(now-30*H).toISOString()});
+ const banners=[{id:uid(),title:'¡Bienvenido a Nexora!',body:'Pide de las tiendas de tu comunidad y te lo llevamos a casa.',image_url:null,community:null,active:true},{id:uid(),title:'Envío barato esta semana',body:'Pedidos de más de $200 en Tetela.',image_url:null,community:'Tetela',active:true}];
+ return{cfg,users,stores,products,orders,items,payouts,messages,settlements,banners,uid}}
+const bal=(did)=>{const due=D.orders.filter(o=>o.driver_id===did&&o.status==='delivered').reduce((a,o)=>a+o.driver_due,0),s=D.settlements.filter(x=>x.driver_id===did),conf=s.filter(x=>x.status==='confirmed').reduce((a,x)=>a+x.amount,0),pend=s.filter(x=>x.status==='pending').reduce((a,x)=>a+x.amount,0);
+ const u=D.users.find(x=>x.id===did),extra=u&&u.employed?D.orders.filter(o=>o.driver_id===did&&o.status==='delivered'&&(!u.employed_since||new Date(o.delivered_at)>=new Date(u.employed_since))).reduce((a,o)=>a+(o.driver_earn||0),0):0;
+ return{owed:Math.max(0,due+extra-conf-(D.cfg.trust_pending?pend:0)),pend}};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const chk=r=>{if(r.error)throw new Error(r.error.message||String(r.error));return r.data};
+
+// ═══ API (con Supabase real, o con datos de ejemplo) ═══
+const api={
+ async settings(){if(mock){return D.cfg}const rows=chk(await sb.from('settings').select('*')),c={...CFG0};rows.forEach(r=>c[r.key]=r.value);return c},
+ async saveSettings(o){if(mock){Object.assign(D.cfg,o);return}chk(await sb.from('settings').upsert(Object.entries(o).map(([key,value])=>({key,value}))))},
+ async dashboard(days){if(mock){const f=Date.now()-days*864e5,O=D.orders,del=O.filter(o=>o.status==='delivered'&&new Date(o.created_at)>=f),ser=[];
+   for(let i=days-1;i>=0;i--){const d=new Date(Date.now()-i*864e5),k=d.toISOString().slice(0,10),x=O.filter(o=>o.created_at.slice(0,10)===k),y=x.filter(o=>o.status==='delivered');ser.push({d:k,n:x.length,g:y.reduce((a,o)=>a+o.items_total+o.delivery_fee,0),p:y.reduce((a,o)=>a+o.platform_cut+o.markup_total,0)})}
+   const com={};O.forEach(o=>com[o.dest_community]=(com[o.dest_community]||0)+1);const ts={};del.forEach(o=>(D.items[o.id]||[]).forEach(i=>{const s=D.stores.find(z=>z.id===i.store_id).name;ts[s]=ts[s]||{s,n:0,t:0};ts[s].n++;ts[s].t+=i.qty*i.unit_price}));
+   const dr=D.users.filter(u=>u.role==='driver');
+   return{orders_today:O.filter(o=>o.created_at.slice(0,10)===new Date().toISOString().slice(0,10)).length,orders_active:O.filter(o=>['new','accepted','picked'].includes(o.status)).length,orders_new:O.filter(o=>o.status==='new').length,delivered:del.length,cancelled:O.filter(o=>o.status==='cancelled').length,
+    sales:del.reduce((a,o)=>a+o.items_total+o.delivery_fee,0),platform:del.reduce((a,o)=>a+o.platform_cut+o.markup_total,0),clients:D.users.filter(u=>u.role==='client').length,sellers:D.users.filter(u=>u.role==='seller').length,
+    drivers:dr.filter(u=>u.driver_status==='approved').length,drivers_pending:dr.filter(u=>u.driver_status==='pending').length,drivers_online:dr.filter(u=>u.online).length,stores:D.stores.filter(s=>s.active&&s.approved).length,stores_pending:D.stores.filter(s=>!s.approved).length,
+    settle_pending:D.settlements.filter(s=>s.status==='pending').length,settle_pending_amount:D.settlements.filter(s=>s.status==='pending').reduce((a,s)=>a+s.amount,0),debt_total:dr.reduce((a,u)=>a+bal(u.id).owed,0),
+    series:ser,by_community:Object.entries(com).map(([c,n])=>({c,n})).sort((a,b)=>b.n-a.n),top_stores:Object.values(ts).sort((a,b)=>b.t-a.t)}}
+  return chk(await sb.rpc('admin_dashboard',{p_days:days}))},
+ async orders(){if(mock)return [...D.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  return chk(await sb.from('orders').select('*,client:profiles!client_id(full_name,public_id,phone),driver:profiles!driver_id(full_name,public_id,phone)').order('created_at',{ascending:false}).limit(400))},
+ async orderDetail(id){if(mock)return{items:D.items[id]||[],payouts:D.payouts[id]||[],messages:D.messages.filter(m=>m.order_id===id)};
+  const[a,b,c]=await Promise.all([sb.from('order_items').select('*').eq('order_id',id),sb.from('store_payouts').select('*,store:stores(name)').eq('order_id',id),sb.from('messages').select('*,sender:profiles!sender_id(full_name,public_id,role)').eq('order_id',id).order('created_at')]);return{items:chk(a),payouts:chk(b),messages:chk(c)}},
+ async orderAction(id,act,driver){if(mock){const o=D.orders.find(x=>x.id===id);if(!o)return'no_existe';
+   if(act==='cancel'){o.status='cancelled'}else if(act==='release'){o.status='new';o.driver_id=null;o.driver=null}
+   else if(act==='assign'){const d=D.users.find(u=>u.id===driver);if(!d||d.driver_status!=='approved')return'repartidor_invalido';o.driver_id=d.id;o.driver={full_name:d.full_name,public_id:d.public_id,phone:d.phone};if(o.status==='new')o.status='accepted'}
+   else if(act==='deliver'){if(!o.driver_id)return'sin_repartidor';const cut=Math.round(o.delivery_fee*D.cfg.platform_pct/100);Object.assign(o,{status:'delivered',delivered_at:new Date().toISOString(),platform_cut:cut,driver_earn:o.delivery_fee-cut,driver_due:o.markup_total+cut});(D.payouts[id]||[]).forEach(p=>p.picked=true)}
+   return'ok'}
+  return chk(await sb.rpc('admin_order_action',{p_id:id,p_action:act,p_driver:driver||null}))},
+ async drivers(){if(mock)return D.users.filter(u=>u.role==='driver').map(u=>{const b=bal(u.id),od=D.orders.filter(o=>o.driver_id===u.id&&o.status==='delivered');return{...u,owed:b.owed,pending_dep:b.pend,deliveries:od.length,earned:od.reduce((a,o)=>a+o.driver_earn,0)}});
+  return chk(await sb.rpc('admin_drivers'))},
+ async profile(id,p){if(mock){const u=D.users.find(x=>x.id===id);Object.assign(u,{full_name:p.name||u.full_name,role:p.role,community:p.community,driver_status:p.role==='driver'?(p.ds||u.driver_status||'pending'):null});return}
+  chk(await sb.rpc('admin_update_profile',{p_id:id,p_name:p.name,p_role:p.role,p_community:p.community||null,p_driver_status:p.ds||null}))},
+ async setEmployee(id,on,wage){if(mock){const u=D.users.find(x=>x.id===id);u.employed=on;u.daily_wage=wage||0;u.employed_since=on?(u.employed_since||new Date().toISOString()):null;return}chk(await sb.rpc('admin_set_employee',{p_id:id,p_on:on,p_wage:wage||0}))},
+ async recordCash(id,amt){if(mock){D.settlements.push({id:D.uid(),driver_id:id,amount:amt,method:'En persona',reference:'Recibido en persona',status:'confirmed',created_at:new Date().toISOString()});return}chk(await sb.rpc('admin_record_cash',{p_driver:id,p_amount:amt}))},
+ async empDays(id){if(mock){const u=D.users.find(x=>x.id===id),out=[];for(let i=0;i<14;i++){const d=new Date(Date.now()-i*864e5),k=d.toDateString(),od=D.orders.filter(o=>o.driver_id===id&&o.status==='delivered'&&new Date(o.delivered_at).toDateString()===k),e=od.reduce((a,o)=>a+(o.driver_earn||0),0),du=od.reduce((a,o)=>a+(o.driver_due||0),0);if(u.employed_since&&d<new Date(u.employed_since)&&k!==new Date(u.employed_since).toDateString())break;out.push({day:d.toISOString().slice(0,10),deliveries:od.length,earn:e,collected:e+du,wage:u.daily_wage||0})}return out}
+  return chk(await sb.rpc('admin_employee_days',{p_driver:id,p_days:14}))},
+ async setDriver(id,st){if(mock){D.users.find(x=>x.id===id).driver_status=st;return}chk(await sb.rpc('admin_set_driver',{p_id:id,p_status:st}))},
+ async ban(id,b){if(mock){const u=D.users.find(x=>x.id===id);u.blocked=b;if(b)u.online=false;return}chk(await sb.rpc('admin_ban_user',{p_id:id,p_ban:b}))},
+ async delUser(id){if(mock){if(D.orders.some(o=>o.client_id===id||o.driver_id===id))throw new Error('Tiene pedidos. Mejor bloquéalo para no perder el historial.');D.users=D.users.filter(u=>u.id!==id);return}chk(await sb.rpc('admin_delete_user',{p_id:id}))},
+ async users(){if(mock)return D.users;return chk(await sb.from('profiles').select('*').order('created_at',{ascending:false}).limit(600))},
+ async signed(path){if(mock||!path||path==='x')return'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="100%" height="100%" fill="#e8f7ee"/><text x="50%" y="50%" font-size="18" text-anchor="middle" fill="#6b7f74">Documento de ejemplo</text></svg>');
+  const{data,error}=await sb.storage.from('kyc').createSignedUrl(path,300);if(error)throw error;return data.signedUrl},
+ async settlements(){if(mock)return [...D.settlements].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  return chk(await sb.from('settlements').select('*,driver:profiles!driver_id(full_name,public_id,phone)').order('created_at',{ascending:false}).limit(200))},
+ async decide(id,ok){if(mock){D.settlements.find(s=>s.id===id).status=ok?'confirmed':'rejected';return}chk(await sb.rpc('admin_confirm_settlement',{p_id:id,p_ok:ok}))},
+ async cardPayouts(){if(mock)return D.orders.filter(o=>o.status==='delivered').flatMap(o=>(D.payouts[o.id]||[]).filter(p=>p.method==='card'&&p.status==='pending').map(p=>({...p,order_id:o.id,order:{public_no:o.public_no,status:o.status},store:{name:p.store.name,owner:{full_name:D.stores.find(s=>s.id===p.store_id).owner.full_name,phone:D.stores.find(s=>s.id===p.store_id).owner.phone}}})));
+  const r=chk(await sb.from('store_payouts').select('*,store:stores(name,owner:profiles!owner_id(full_name,phone)),order:orders(public_no,status)').eq('status','pending').eq('method','card').limit(200));return r.filter(x=>x.order&&x.order.status==='delivered')},
+ async payPayout(oid,sid){if(mock){const p=D.payouts[oid].find(x=>x.store_id===sid);p.status='paid';return}chk(await sb.from('store_payouts').update({status:'paid',paid_at:new Date().toISOString()}).eq('order_id',oid).eq('store_id',sid))},
+ async stores(){if(mock)return D.stores.map(s=>({...s,n_products:D.products.filter(p=>p.store_id===s.id).length}));
+  const[a,b]=await Promise.all([sb.from('stores').select('*,owner:profiles!owner_id(full_name,public_id,phone)').order('created_at',{ascending:false}),sb.from('products').select('store_id')]);
+  const c={};chk(b).forEach(p=>c[p.store_id]=(c[p.store_id]||0)+1);return chk(a).map(s=>({...s,n_products:c[s.id]||0}))},
+ async storeSave(id,p){if(mock){Object.assign(D.stores.find(s=>s.id===id),p);return}chk(await sb.from('stores').update(p).eq('id',id))},
+ async storeDel(id){if(mock){D.stores=D.stores.filter(s=>s.id!==id);D.products=D.products.filter(p=>p.store_id!==id);return}chk(await sb.from('stores').delete().eq('id',id))},
+ async products(sid){if(mock)return D.products.filter(p=>p.store_id===sid);return chk(await sb.from('products').select('*').eq('store_id',sid).order('name'))},
+ async prodSave(id,p){if(mock){Object.assign(D.products.find(x=>x.id===id),p);return}chk(await sb.from('products').update(p).eq('id',id))},
+ async prodDel(id){if(mock){D.products=D.products.filter(p=>p.id!==id);return}chk(await sb.from('products').delete().eq('id',id))},
+ async banners(){if(mock)return D.banners;return chk(await sb.from('banners').select('*').order('title'))},
+ async bannerSave(b){if(mock){if(b.id){Object.assign(D.banners.find(x=>x.id===b.id),b)}else D.banners.push({...b,id:D.uid()});return}
+  chk(b.id?await sb.from('banners').update(b).eq('id',b.id):await sb.from('banners').insert(b))},
+ async bannerDel(id){if(mock){D.banners=D.banners.filter(b=>b.id!==id);return}chk(await sb.from('banners').delete().eq('id',id))},
+ async upload(file){if(mock)return URL.createObjectURL(file);const blob=await shrink(file,1100),p=`${S.me.id}/ads-${Date.now()}.jpg`;
+  const{error}=await sb.storage.from('media').upload(p,blob,{contentType:'image/jpeg',upsert:true});if(error)throw error;return sb.storage.from('media').getPublicUrl(p).data.publicUrl},
+ async messages(){if(mock)return [...D.messages].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  return chk(await sb.from('messages').select('*,sender:profiles!sender_id(full_name,public_id,role),order:orders!order_id(public_no,status,client_id,driver_id)').order('created_at',{ascending:false}).limit(400))}
+};
+function shrink(file,max){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(new Error('imagen')),'image/jpeg',.82)};im.onerror=()=>no(new Error('No se pudo leer la imagen'));im.src=URL.createObjectURL(file)})}
+
+// ═══ Sesión ═══
+const email=p=>p.includes('@')?p:p+'@nexora.app';
+async function enter(){S.cfg=await api.settings();$('login').classList.add('hide');$('app').classList.remove('hide');$('who').textContent=S.me.full_name;$('mockPill').classList.toggle('hide',!mock);
+ buildNav();go(location.hash.slice(1)&&V[location.hash.slice(1)]?location.hash.slice(1):'dash');
+ clearInterval(ST_TIMER);ST_TIMER=setInterval(()=>{if(!document.hidden&&['dash','orders','map','cash'].includes(S.view)&&$('md').classList.contains('hide'))refresh(true)},30000);
+ if(live)sb.channel('adm').on('postgres_changes',{event:'*',schema:'public',table:'orders'},p=>{if(p.eventType==='INSERT')toast('🛒 Nuevo pedido #'+p.new.public_no);if(['dash','orders','map'].includes(S.view)&&$('md').classList.contains('hide'))refresh(true);loadBadges()}).subscribe()}
+async function login(){const ph=$('lPh').value.trim().toLowerCase(),pw=$('lPw').value,e=$('lErr');e.textContent='';
+ if(mock){e.textContent='Aún no hay Supabase conectado. Usa el botón amarillo para ver el panel con datos de ejemplo.';return}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ph)||pw.length<6){e.textContent='Escribe tu correo y tu contraseña.';return}
+ $('lGo').disabled=true;try{await doLogin(ph,pw)}catch(x){e.textContent=x.message==='Invalid login credentials'?'Correo o contraseña incorrectos.':x.message}$('lGo').disabled=false}
+async function doLogin(ph,pw,test){
+ let r=await sb.auth.signInWithPassword({email:email(ph),password:pw});
+ if(r.error&&test)r=await sb.auth.signUp({email:email(ph),password:pw,options:{data:{phone:ph,full_name:'Admin Prueba'}}});
+ if(r.error)throw r.error;
+ const{data:p,error}=await sb.from('profiles').select('*').eq('id',r.data.user.id).maybeSingle();
+ if(error||!p){await sb.auth.signOut();throw new Error('No se pudo leer tu perfil. ¿Ya ejecutaste nexora.sql completo?')}
+ if(p.role!=='admin'){await sb.auth.signOut();throw new Error(test?'La cuenta de prueba no quedó como admin. Vuelve a ejecutar nexora.sql completo (trae el modo prueba del admin) y reintenta.':'Esta cuenta no es de administrador.')}
+ S.me=p;await enter()}
+async function logout(){if(live)await sb.auth.signOut();location.hash='';location.reload()}
+function startMock(){D=mkDemo();S.me=D.users[0];enter()}
+(function init(){
+ $('lGo').onclick=login;$('lPw').onkeydown=e=>{if(e.key==='Enter')login()};
+ if(mock){$('lDemo').textContent='👀 Ver el panel con datos de ejemplo';$('lDemo').onclick=startMock;$('lDemo').classList.remove('hide');
+  $('lHelp').innerHTML='Aún no hay Supabase conectado (config.js). Con el botón amarillo puedes ver el diseño y probar todo con datos de ejemplo.'}
+ else{if(N.DEMO){$('lDemo').textContent='🧪 Entrar como admin de prueba';$('lDemo').onclick=async()=>{try{await doLogin(N.TEST.admin,N.TEST.pass,true)}catch(x){$('lErr').textContent=x.message}};$('lDemo').classList.remove('hide')}
+  $('lHelp').innerHTML='Para ser administrador de verdad, en Supabase ejecuta:<br><code>update profiles set role=\'admin\' where email=\'TU_CORREO\';</code>';
+  sb.auth.getSession().then(async({data})=>{if(data.session){const{data:p}=await sb.from('profiles').select('*').eq('id',data.session.user.id).maybeSingle();if(p&&p.role==='admin'){S.me=p;enter()}}})}
+ if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+
+// ═══ Navegación ═══
+const V={dash:{t:'Tablero',i:'📊',r:rDash},orders:{t:'Pedidos',i:'🧾',r:rOrders},drivers:{t:'Repartidores',i:'🛵',r:rDrivers},cash:{t:'Caja y depósitos',i:'💵',r:rCash},stores:{t:'Tiendas y productos',i:'🏪',r:rStores},users:{t:'Usuarios',i:'👥',r:rUsers},ads:{t:'Anuncios y promociones',i:'📣',r:rAds},map:{t:'Mapa en vivo',i:'🗺️',r:rMap},chats:{t:'Chats',i:'💬',r:rChats},settings:{t:'Ajustes',i:'⚙️',r:rSettings}};
+const BADGE={orders:'orders_new',drivers:'drivers_pending',cash:'settle_pending',stores:'stores_pending'};
+function buildNav(){$('nav').innerHTML=Object.entries(V).map(([k,v])=>`<button class="nv" data-v="${k}" onclick="go('${k}')"><i>${v.i}</i>${v.t}<em class="hide" id="b-${k}"></em></button>`).join('')}
+async function loadBadges(){try{const d=await api.dashboard(S.days);S.nav=d;for(const[k,f]of Object.entries(BADGE)){const e=$('b-'+k);if(e){e.textContent=d[f];e.classList.toggle('hide',!d[f])}}return d}catch(e){return null}}
+async function go(v){S.view=v;location.hash=v;$('side').classList.remove('open');document.querySelectorAll('.nv[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));$('vt').textContent=V[v].t;await draw()}
+async function draw(quiet){const el=$('view');if(!quiet)el.innerHTML='<div class="spin"></div>';try{const h=await V[S.view].r();if(h!=null)el.innerHTML=h;loadBadges();const af=V[S.view].after;if(af)af()}catch(e){console.error(e);el.innerHTML=`<div class="note bad"><b>No se pudo cargar.</b><br>${esc(e.message)}<br><br>Si acabas de actualizar la app, vuelve a ejecutar <b>SQL/nexora.sql</b> completo en Supabase.</div>`}}
+const refresh=q=>draw(q===true);
+
+// ═══ TABLERO ═══
+function bars(data,key,fmt,color){const W=640,Hh=170,p=10,max=Math.max(1,...data.map(x=>x[key])),bw=(W-p*2)/data.length,every=Math.ceil(data.length/10);
+ return `<svg viewBox="0 0 ${W} ${Hh+24}" class="ch" role="img">`+[.25,.5,.75,1].map(k=>`<line x1="${p}" x2="${W-p}" y1="${Hh-k*Hh*.92}" y2="${Hh-k*Hh*.92}" stroke="#e6efe9"/>`).join('')+
+ data.map((x,i)=>{const h=Math.max(2,x[key]/max*Hh*.92),X=p+i*bw+bw*.14;return `<rect x="${X}" y="${Hh-h}" width="${bw*.72}" height="${h}" rx="5" fill="${color}"><title>${x.d}: ${fmt(x[key])}</title></rect>${i%every==0?`<text x="${X+bw*.36}" y="${Hh+16}" text-anchor="middle">${x.d.slice(8)}/${x.d.slice(5,7)}</text>`:''}`}).join('')+`</svg>`}
+const hbar=(rows,fmt)=>{const m=Math.max(1,...rows.map(r=>r.v));return rows.length?rows.map(r=>`<div class="bar"><div><span>${esc(r.l)}</span><b>${fmt(r.v)}</b></div><i style="width:${Math.max(3,r.v/m*100)}%"></i></div>`).join(''):'<p class="mt">Aún no hay datos.</p>'};
+async function rDash(){const[d,o]=await Promise.all([api.dashboard(S.days),api.orders()]);S.nav=d;const sum=k=>d.series.reduce((a,x)=>a+x[k],0);
+ const al=[[d.drivers_pending,'🛵 repartidores por aprobar','drivers',1],[d.stores_pending,'🏪 tiendas por aprobar','stores',1],[d.settle_pending,`💵 depósitos por confirmar (${money(d.settle_pending_amount)})`,'cash',1],[d.orders_new,'🧾 pedidos nuevos sin repartidor','orders',0]].filter(x=>x[0]>0);
+ return `<div class="tb"><b>Periodo:</b>${[7,14,30].map(n=>`<span class="chip ${S.days===n?'on':''}" onclick="S.days=${n};draw()">${n} días</span>`).join('')}</div>
+ ${al.length?`<div class="al">${al.map(a=>`<button class="${a[3]?'r':''}" onclick="${a[2]=='drivers'?"S.df='pending';":a[2]=='stores'?"S.sf='pending';":a[2]=='orders'?"S.of.st='new';":''}go('${a[2]}')">${a[0]} ${a[1]} →</button>`).join('')}</div>`:'<div class="note ok">✅ Todo al día: no hay nada pendiente por revisar.</div>'}
+ <div class="grid"><div class="card kpi dark"><span>💰</span><small>Ganancia de Nexora (${S.days}d)</small><b>${money(d.platform)}</b></div><div class="card kpi"><span>🛒</span><small>Ventas totales (${S.days}d)</small><b>${money(d.sales)}</b></div>
+ <div class="card kpi"><span>🧾</span><small>Pedidos hoy</small><b>${d.orders_today}</b></div><div class="card kpi"><span>🔥</span><small>Pedidos en curso</small><b>${d.orders_active}</b></div>
+ <div class="card kpi"><span>🛵</span><small>Repartidores en línea</small><b>${d.drivers_online}<small> / ${d.drivers}</small></b></div><div class="card kpi"><span>💵</span><small>Repartidores deben depositar</small><b>${money(d.debt_total)}</b></div>
+ <div class="card kpi"><span>👥</span><small>Clientes</small><b>${d.clients}</b></div><div class="card kpi"><span>🏪</span><small>Tiendas activas</small><b>${d.stores}</b><small>${d.sellers} vendedores</small></div></div>
+ <div class="g2"><div class="card"><h3>🧾 Pedidos por día<small>${sum('n')} en total</small></h3>${bars(d.series,'n',v=>v+' pedidos','#22e07a')}</div>
+ <div class="card"><h3>💰 Ganancia de Nexora por día<small>${money(sum('p'))}</small></h3>${bars(d.series,'p',money,'#0fb85c')}</div></div>
+ <div class="g2"><div class="card"><h3>📍 Pedidos por comunidad</h3>${hbar(d.by_community.map(x=>({l:x.c,v:x.n})),v=>v)}</div><div class="card"><h3>🏆 Tiendas que más venden</h3>${hbar(d.top_stores.map(x=>({l:x.s,v:+x.t})),money)}</div></div>
+ <div class="card"><h3>Últimos pedidos<small><a href="#orders" onclick="go('orders');return false" style="color:var(--g2);font-weight:700">Ver todos →</a></small></h3>${ordTable(o.slice(0,6))}</div>`}
+
+// ═══ PEDIDOS ═══
+const dr=x=>x?`<b>${pid(x.public_id)}</b> ${esc(x.full_name)}`:'<span class="pill y">Sin repartidor</span>';
+function ordTable(list){return tbl(['#','Fecha','Cliente','Destino','#Tiendas','#Total','Repartidor','Estado'],list.map(o=>`<tr class="c" onclick="openOrder('${o.id}')"><td><b>${o.public_no}</b></td><td>${dt(o.created_at)}</td><td>${esc(o.client?.full_name)}</td><td>${esc(o.dest_community||'—')}</td><td class="n">${o.stores_n||1}</td><td class="n"><b>${money(+o.items_total+ +o.delivery_fee)}</b></td><td>${dr(o.driver)}</td><td>${stPill(o.status)}</td></tr>`))}
+async function rOrders(){const all=await api.orders(),q=S.of.q.toLowerCase(),f=all.filter(o=>(S.of.st==='all'||o.status===S.of.st)&&(!q||String(o.public_no).includes(q)||(o.client?.full_name||'').toLowerCase().includes(q)||(o.client?.phone||'').includes(q)||(o.driver?.full_name||'').toLowerCase().includes(q)||pid(o.driver?.public_id).includes(q)));
+ const cnt=s=>all.filter(o=>o.status===s).length;S._ol=f;
+ return `<div class="tb"><input id="oq" placeholder="🔎 Buscar: #pedido, cliente, teléfono, repartidor…" value="${esc(S.of.q)}" oninput="S.of.q=this.value;clearTimeout(window._t);window._t=setTimeout(()=>{draw(true);setTimeout(()=>{const i=$('oq');i.focus();i.setSelectionRange(99,99)},0)},350)">
+  ${[['all','Todos'],['new','Nuevos'],['accepted','Aceptados'],['picked','Recogidos'],['delivered','Entregados'],['cancelled','Cancelados']].map(([k,l])=>`<span class="chip ${S.of.st===k?'on':''}" onclick="S.of.st='${k}';draw(true)">${l}${k!=='all'?' · '+cnt(k):''}</span>`).join('')}
+  <button class="btn l s" style="margin-left:auto" onclick="expOrders()">⬇ Exportar CSV</button></div>${ordTable(f)}<p class="mt" style="margin-top:8px">Mostrando ${f.length} de ${all.length}</p>`}
+function expOrders(){csv('pedidos-nexora.csv',(S._ol||[]).map(o=>({numero:o.public_no,fecha:o.created_at,cliente:o.client?.full_name,telefono:o.client?.phone,destino:o.dest_community,tiendas:o.stores_n,productos:o.items_total,envio:o.delivery_fee,total:+o.items_total+ +o.delivery_fee,repartidor_id:o.driver?.public_id||'',repartidor:o.driver?.full_name||'',estado:o.status,ganancia_nexora:o.status==='delivered'?(+o.platform_cut||0)+(+o.markup_total||0):''})))}
+async function openOrder(id){const all=await api.orders(),o=all.find(x=>x.id===id);if(!o)return;openModal('Pedido #'+o.public_no+' '+stPill(o.status),'<div class="spin"></div>',true);
+ const[det,drs]=await Promise.all([api.orderDetail(id),api.drivers()]);const sts=[...new Set(det.items.map(i=>i.store_id))],open=['new','accepted','picked'].includes(o.status),
+ ok=drs.filter(d=>d.driver_status==='approved'&&!d.blocked);
+ const gain=o.status==='delivered'?(+o.platform_cut||0)+(+o.markup_total||0):null;
+ $('mdc').innerHTML=`<div class="mh"><h3>Pedido #${o.public_no} ${stPill(o.status)}</h3><button onclick="closeModal()">✕</button></div>
+ <div class="g2" style="margin:0"><div><label class="f">Cliente</label><p><b>${esc(o.client?.full_name)}</b> · ID ${pid(o.client?.public_id)}<br><span class="mt">${esc(o.client?.phone||'')} · ${esc(o.dest_community||'')}</span></p>${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}
+  <div class="acts" style="margin-top:6px">${wa(o.client?.phone)}${gmap(o.lat,o.lng)}</div></div>
+  <div><label class="f">Repartidor</label><p>${dr(o.driver)}<br><span class="mt">${esc(o.driver?.phone||'')}</span></p>${o.driver?`<div class="acts" style="margin-top:6px">${wa(o.driver.phone)}</div>`:''}<p class="mt" style="margin-top:8px">Creado ${dt(o.created_at)}${o.delivered_at?'<br>Entregado '+dt(o.delivered_at):''}</p></div></div>
+ <label class="f">Qué compró</label>${sts.map(s=>{const p=det.payouts.find(x=>x.store_id===s),its=det.items.filter(i=>i.store_id===s);return `<div class="card" style="box-shadow:none;border:2px solid var(--line);margin:6px 0;padding:11px"><b>🏪 ${esc(p?.store?.name||'Tienda')}</b> ${p?`<span class="pill ${p.method==='card'?'b':''}">${p.method==='card'?'Tarjeta':'Efectivo'}</span> <span class="pill ${p.picked?'':'y'}">${p.picked?'Recogido':'Por recoger'}</span>`:''}
+  ${its.map(i=>`<div class="row"><span>${+i.qty} ${esc(i.unit||'')} · ${esc(i.name)}</span><span class="mt">vendedor ${money(i.unit_price)} → cliente ${money(i.customer_price)}</span></div>`).join('')}</div>`}).join('')}
+ <div class="row"><span>Productos (lo que paga el cliente)</span><b>${money(o.items_total)}</b></div><div class="row"><span>Envío ${o.km?`(${(+o.km).toFixed(1)} km por calles)`:''}</span><b>${money(o.delivery_fee)}</b></div><div class="row t"><span>Total que cobra el repartidor</span><span>${money(+o.items_total+ +o.delivery_fee)}</span></div>
+ ${gain!=null?`<div class="note ok"><b>Ganancia de Nexora: ${money(gain)}</b> = cargo por productos ${money(o.markup_total)} + % del envío ${money(o.platform_cut)}<br>Repartidor ganó ${money(o.driver_earn)} · Debe depositar ${money(o.driver_due)}</div>`:`<div class="mt">Cargo por productos de este pedido: ${money(o.markup_total)}</div>`}
+ ${det.messages.length?`<label class="f">Chat cliente ↔ repartidor</label><div style="max-height:200px;overflow:auto">${det.messages.map(m=>`<div class="bub ${m.sender?.role==='driver'?'dr':''}"><small>${esc(m.sender?.full_name)} · ${dt(m.created_at)}</small>${esc(m.body)}</div>`).join('')}</div>`:''}
+ ${open||o.status==='cancelled'?`<label class="f">Acciones del administrador</label><div class="acts">
+  ${open?`<select id="asg" style="width:auto;margin:0"><option value="">— asignar repartidor —</option>${ok.map(d=>`<option value="${d.id}" ${d.id===o.driver_id?'selected':''}>${pid(d.public_id)} · ${esc(d.full_name)}</option>`).join('')}</select><button class="btn s" onclick="oAct('${o.id}','assign')">Asignar</button>`:''}
+  ${open&&o.driver_id?`<button class="btn s d" onclick="oAct('${o.id}','deliver','¿Marcar como ENTREGADO y calcular el dinero?')">✔ Marcar entregado</button><button class="btn l s" onclick="oAct('${o.id}','release','¿Quitar al repartidor y volver a publicarlo?')">↩ Liberar pedido</button>`:''}
+  ${open?`<button class="btn red s" onclick="oAct('${o.id}','cancel','¿Cancelar este pedido?')">✖ Cancelar pedido</button>`:''}</div>`:''}`}
+async function oAct(id,act,msg){if(msg&&!confirm(msg))return;let d=null;if(act==='assign'){d=$('asg').value;if(!d)return toast('Elige un repartidor',1)}
+ try{const r=await api.orderAction(id,act,d);const M={ok:'Listo ✔',cerrado:'Ese pedido ya está cerrado',sin_repartidor:'Primero asigna un repartidor',repartidor_invalido:'Ese repartidor no está aprobado'};toast(M[r]||r,r!=='ok');if(r==='ok'){closeModal();draw(true)}}catch(e){toast(e.message,1)}}
+
+// ═══ REPARTIDORES ═══
+async function rDrivers(){const all=await api.drivers(),f=all.filter(d=>S.df==='all'||(S.df==='pending'&&d.driver_status==='pending')||(S.df==='approved'&&d.driver_status==='approved')||(S.df==='off'&&['rejected','suspended'].includes(d.driver_status)||(S.df==='off'&&d.blocked))),cnt=s=>all.filter(d=>d.driver_status===s).length,lim=+S.cfg.debt_limit;S._dr=all;
+ return `<div class="tb">${[['pending','En revisión',cnt('pending')],['approved','Aprobados',cnt('approved')],['off','Rechazados / suspendidos',cnt('rejected')+cnt('suspended')],['all','Todos',all.length]].map(([k,l,n])=>`<span class="chip ${S.df===k?'on':''}" onclick="S.df='${k}';draw(true)">${l} · ${n}</span>`).join('')}</div>
+ ${S.df==='pending'&&f.length?'<div class="note">Toca un repartidor para ver su <b>INE y su foto</b> y decidir si lo apruebas.</div>':''}
+ ${tbl(['ID','Nombre','Teléfono','Comunidad','Vehículo','Estado','En línea','#Entregas','#Ganó','#Debe depositar'],f.map(d=>`<tr class="c" onclick="openDriver('${d.id}')"><td><b>${pid(d.public_id)}</b></td><td>${esc(d.full_name)}${d.blocked?' <span class="pill r">Bloqueado</span>':''}</td><td>${esc(d.phone)}</td><td>${esc(d.community||'—')}</td><td>${esc(d.vehicle||'—')}</td><td>${dsPill(d.driver_status)}</td><td><span class="dot ${d.online?'on':''}"></span>${d.online?'Sí':'No'}</td><td class="n">${d.deliveries}</td><td class="n">${money(d.earned)}</td><td class="n" style="${+d.owed>lim?'color:var(--red);font-weight:800':''}">${money(d.owed)}</td></tr>`))}`}
+async function openDriver(id){const d=(S._dr||await api.drivers()).find(x=>x.id===id);if(!d)return;openModal('Repartidor '+pid(d.public_id)+' '+dsPill(d.driver_status),'<div class="spin"></div>',true);
+ let a='',b='';try{[a,b]=await Promise.all([api.signed(d.ine_path),api.signed(d.face_path)])}catch(e){}
+ const st=d.driver_status,lim=+S.cfg.debt_limit;
+ $('mdc').innerHTML=`<div class="mh"><h3>Repartidor ${pid(d.public_id)} ${dsPill(st)} ${d.blocked?'<span class="pill r">Bloqueado</span>':''}</h3><button onclick="closeModal()">✕</button></div>
+ <p><b style="font-size:18px">${esc(d.full_name)}</b><br><span class="mt">${esc(d.phone)} · ${esc(d.community||'sin comunidad')} · ${esc(d.vehicle||'sin vehículo')} · Registrado ${dt(d.created_at)}</span></p>
+ <div class="kyc" style="margin:12px 0"><div>INE<br>${a?`<img src="${esc(a)}" onclick="window.open(this.src)" alt="INE">`:'Sin foto'}</div><div>Foto de su rostro<br>${b?`<img src="${esc(b)}" onclick="window.open(this.src)" alt="Rostro">`:'Sin foto'}</div></div>
+ <div class="grid" style="margin:0"><div class="card kpi"><small>Entregas</small><b>${d.deliveries}</b></div><div class="card kpi"><small>Ha ganado</small><b>${money(d.earned)}</b></div><div class="card kpi" style="${+d.owed>lim&&!d.employed?'background:#fde6e3':''}"><small>${d.employed?'Te debe entregar':'Debe depositar'}</small><b>${money(d.owed)}</b></div></div>
+ ${st==='approved'?empBlock(d):''}
+ ${+d.owed>lim&&!d.employed?`<div class="note bad">Pasó el límite de ${money(lim)}: no puede aceptar pedidos hasta que deposite.</div>`:''}
+ <div class="acts">${st!=='approved'?`<button class="btn" onclick="dSet('${d.id}','approved')">✔ Aprobar</button>`:''}${st==='pending'?`<button class="btn red" onclick="dSet('${d.id}','rejected')">✖ Rechazar</button>`:''}${st==='approved'?`<button class="btn red" onclick="dSet('${d.id}','suspended','¿Suspender a este repartidor?')">🚫 Suspender</button>`:''}
+ <button class="btn l" onclick="uBan('${d.id}',${!d.blocked})">${d.blocked?'🔓 Desbloquear acceso':'🔒 Bloquear acceso'}</button>${wa(d.phone)}</div>`;
+ if(d.employed&&st==='approved')api.empDays(d.id).then(r=>{const e=$('empDays');if(!e)return;const hoy=r[0]||{},tot=r.reduce((a,x)=>a+ +x.wage,0);
+  e.innerHTML=`<p class="mt" style="margin:10px 0 4px"><b>Cuenta por día</b> (últimos 14 días desde que lo contrataste)</p>`+tbl(['Día','#Pedidos','#Cobró (total)','#Sueldo del día'],r.map(x=>`<tr><td>${esc(String(x.day))}</td><td class="n">${x.deliveries}</td><td class="n">${money(x.collected)}</td><td class="n">${money(x.wage)}</td></tr>`))+`<p class="mt" style="margin:6px 0">Sueldo de esos días: <b>${money(tot)}</b> · Hoy cobró <b>${money(hoy.collected||0)}</b> y le toca <b>${money(hoy.wage||0)}</b></p>`}).catch(()=>{})}
+function empBlock(d){return d.employed?`<div class="card" style="margin:12px 0;background:#eef6ff"><b>💼 Empleado tuyo</b> · sueldo ${money(d.daily_wage)} por día<br><span class="mt">Contratado ${dt(d.employed_since)} · Todo lo que cobra es tuyo: él te lo entrega (depósito o en persona) y tú le pagas su sueldo del día, haga o no haga pedidos.</span>
+ <div id="empDays"></div><div class="acts" style="margin-top:10px"><button class="btn" onclick="eCash('${d.id}',${+d.owed})">💵 Recibí dinero en persona</button><button class="btn l" onclick="eHire('${d.id}',${+d.daily_wage})">✏️ Cambiar sueldo</button><button class="btn red" onclick="eFire('${d.id}')">Dejar de contratar</button></div></div>`
+ :`<div class="acts" style="margin:12px 0"><button class="btn l" onclick="eHire('${d.id}',0)">💼 Contratar con sueldo diario</button></div>`}
+async function eHire(id,cur){const v=prompt('¿Cuánto le pagas por día? (pesos, haga o no haga pedidos)',cur||'');if(v===null)return;const n=Math.round(+v);if(!(n>=0)||v==='')return toast('Escribe un monto válido',1);try{await api.setEmployee(id,true,n);toast('Listo ✔ Sueldo: '+money(n)+' por día');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function eFire(id){if(!confirm('¿Dejar de contratar? Sus próximas ganancias vuelven a ser suyas. Lo que ya te debe se conserva.'))return;try{await api.setEmployee(id,false,0);toast('Listo ✔');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function eCash(id,owed){const v=prompt('¿Cuánto dinero te entregó en persona?',owed||'');if(v===null)return;const n=Math.round(+v*100)/100;if(!(n>0))return toast('Escribe un monto válido',1);try{await api.recordCash(id,n);toast('Recibido ✔ '+money(n));closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function dSet(id,st,msg){if(msg&&!confirm(msg))return;try{await api.setDriver(id,st);toast('Listo ✔');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function uBan(id,b){if(b&&!confirm('¿Bloquear el acceso? No podrá iniciar sesión.'))return;try{await api.ban(id,b);toast(b?'Bloqueado 🔒':'Desbloqueado 🔓');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+
+// ═══ CAJA ═══
+async function rCash(){const[st,drs,cp]=await Promise.all([api.settlements(),api.drivers(),api.cardPayouts()]),pend=st.filter(s=>s.status==='pending'),lim=+S.cfg.debt_limit,tot=drs.reduce((a,d)=>a+ +d.owed,0);S._cp=cp;
+ return `<div class="grid"><div class="card kpi dark"><span>💵</span><small>Los repartidores deben depositar</small><b>${money(tot)}</b></div><div class="card kpi"><span>⏳</span><small>Depósitos por confirmar</small><b>${pend.length}</b><small>${money(pend.reduce((a,s)=>a+ +s.amount,0))}</small></div><div class="card kpi"><span>🏪</span><small>Por pagar a vendedores (tarjeta)</small><b>${money(cp.reduce((a,p)=>a+ +p.amount,0))}</b></div></div>
+ <h3 style="margin:14px 0 8px">⏳ Depósitos por confirmar</h3>
+ ${pend.length?pend.map(s=>`<div class="card" style="margin-bottom:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>${pid(s.driver?.public_id)} · ${esc(s.driver?.full_name)}</b><br><span class="mt">${esc(s.method||'')} ${s.reference?'· '+esc(s.reference):''} · ${dt(s.created_at)}</span></div><b style="font-size:22px">${money(s.amount)}</b>
+  ${s.proof_path?`<button class="btn l s" onclick="showProof('${esc(s.proof_path)}')">🧾 Ver comprobante</button>`:'<span class="pill g">Sin comprobante</span>'}<button class="btn s" onclick="sDec('${s.id}',true)">✔ Confirmar</button><button class="btn red s" onclick="sDec('${s.id}',false)">✖ Rechazar</button></div>`).join(''):'<div class="note ok">No hay depósitos esperando confirmación.</div>'}
+ <h3 style="margin:22px 0 8px">🛵 Saldo de cada repartidor</h3>
+ ${tbl(['ID','Repartidor','#Debe depositar','#Depósito en revisión','Estado'],drs.filter(d=>d.driver_status==='approved').sort((a,b)=>b.owed-a.owed).map(d=>`<tr class="c" onclick="openDriver('${d.id}')"><td><b>${pid(d.public_id)}</b></td><td>${esc(d.full_name)}</td><td class="n"><b>${money(d.owed)}</b></td><td class="n">${money(d.pending_dep)}</td><td>${d.employed?`<span class="pill">💼 Empleado${+d.owed>0?' · te debe':''}</span>`:+d.owed>lim?'<span class="pill r">Bloqueado (pasó el límite)</span>':+d.owed>0?'<span class="pill y">Debe</span>':'<span class="pill">Al corriente</span>'}</td></tr>`))}
+ <h3 style="margin:22px 0 8px">🏪 Pagos pendientes a vendedores (pedidos con tarjeta)</h3>
+ ${cp.length?tbl(['Pedido','Vendedor','Tienda','#Monto',''],cp.map((p,i)=>`<tr><td>#${p.order?.public_no}</td><td>${esc(p.store?.owner?.full_name||'')}</td><td>${esc(p.store?.name)}</td><td class="n"><b>${money(p.amount)}</b></td><td class="n"><button class="btn s" onclick="payOut(${i})">Marcar pagado</button></td></tr>`)):'<div class="note">Nada pendiente. (Los cobros con tarjeta aparecen aquí cuando actives la tarjeta en Ajustes.)</div>'}
+ <h3 style="margin:22px 0 8px">Historial de depósitos</h3>
+ ${tbl(['Fecha','Repartidor','Forma','Referencia','#Monto','Estado'],st.filter(s=>s.status!=='pending').slice(0,30).map(s=>`<tr><td>${dt(s.created_at)}</td><td>${pid(s.driver?.public_id)} · ${esc(s.driver?.full_name)}</td><td>${esc(s.method||'')}</td><td>${esc(s.reference||'')}</td><td class="n">${money(s.amount)}</td><td>${s.status==='confirmed'?'<span class="pill">Confirmado</span>':'<span class="pill r">Rechazado</span>'}</td></tr>`))}`}
+async function showProof(p){openModal('Comprobante de depósito','<div class="spin"></div>');try{const u=await api.signed(p);$('mdc').innerHTML=`<div class="mh"><h3>Comprobante de depósito</h3><button onclick="closeModal()">✕</button></div><img src="${esc(u)}" style="width:100%;border-radius:12px">`}catch(e){closeModal();toast(e.message,1)}}
+async function sDec(id,ok){if(!ok&&!confirm('¿Rechazar este depósito? El repartidor seguirá debiendo ese dinero.'))return;try{await api.decide(id,ok);toast(ok?'Depósito confirmado ✔':'Depósito rechazado');draw(true)}catch(e){toast(e.message,1)}}
+async function payOut(i){const p=S._cp[i];if(!confirm(`¿Ya le pagaste ${money(p.amount)} a ${p.store?.name}?`))return;try{await api.payPayout(p.order_id,p.store_id);toast('Marcado como pagado ✔');draw(true)}catch(e){toast(e.message,1)}}
+
+// ═══ TIENDAS Y PRODUCTOS ═══
+async function rStores(){const all=await api.stores(),f=all.filter(s=>S.sf==='all'||(S.sf==='pending'&&!s.approved)||(S.sf==='active'&&s.approved&&s.active)||(S.sf==='off'&&s.approved&&!s.active));S._st=all;
+ return `<div class="tb">${[['pending','Por aprobar',all.filter(s=>!s.approved).length],['active','Activas',all.filter(s=>s.approved&&s.active).length],['off','Pausadas',all.filter(s=>s.approved&&!s.active).length],['all','Todas',all.length]].map(([k,l,n])=>`<span class="chip ${S.sf===k?'on':''}" onclick="S.sf='${k}';draw(true)">${l} · ${n}</span>`).join('')}</div>
+ ${tbl(['','Negocio','Comunidad','Dueño','#Productos','Cobra con','Estado'],f.map(s=>`<tr class="c" onclick="openStore('${s.id}')"><td>${img(s.image_url)}</td><td><b>${esc(s.name)}</b><br><span class="mt">${esc((s.description||'').slice(0,50))}</span></td><td>${esc(s.community)}</td><td>${esc(s.owner?.full_name||'—')}</td><td class="n">${s.n_products}</td><td>${s.accepts_cash?'💵 ':''}${s.accepts_card?'💳':''}</td><td>${!s.approved?'<span class="pill y">Por aprobar</span>':s.active?'<span class="pill">Activa</span>':'<span class="pill g">Pausada</span>'}</td></tr>`))}`}
+async function openStore(id){const s=(S._st||await api.stores()).find(x=>x.id===id);if(!s)return;S._sid=id;openModal(esc(s.name),'<div class="spin"></div>',true);const pr=await api.products(id),c=S.cfg;
+ $('mdc').innerHTML=`<div class="mh"><h3>${esc(s.name)} ${!s.approved?'<span class="pill y">Por aprobar</span>':s.active?'<span class="pill">Activa</span>':'<span class="pill g">Pausada</span>'}</h3><button onclick="closeModal()">✕</button></div>
+ <div style="display:flex;gap:12px;align-items:center">${img(s.image_url)}<span class="mt">Dueño: <b>${esc(s.owner?.full_name||'—')}</b> · ${esc(s.owner?.phone||'')}</span><span style="margin-left:auto" class="acts">${wa(s.owner?.phone)}${gmap(s.lat,s.lng)}</span></div>
+ <div class="g2" style="margin:0"><div><label class="f">Nombre</label><input id="sN" value="${esc(s.name)}"><label class="f">Comunidad</label><input id="sC" value="${esc(s.community)}"></div><div><label class="f">Descripción</label><textarea id="sD" rows="3">${esc(s.description||'')}</textarea></div></div>
+ <div class="acts" style="margin-top:8px"><label><input type="checkbox" id="sCash" ${s.accepts_cash?'checked':''}> 💵 Efectivo</label><label><input type="checkbox" id="sCard" ${s.accepts_card?'checked':''}> 💳 Tarjeta</label></div>
+ <div class="acts"><button class="btn" onclick="stSave('${id}')">💾 Guardar</button>${!s.approved?`<button class="btn d" onclick="stFlag('${id}',{approved:true})">✔ Aprobar tienda</button>`:`<button class="btn l" onclick="stFlag('${id}',{approved:false})">Quitar aprobación</button>`}
+  <button class="btn l" onclick="stFlag('${id}',{active:${!s.active}})">${s.active?'🚫 Pausar':'▶ Activar'}</button><button class="btn red" onclick="stDel('${id}')">🗑 Eliminar</button></div>
+ <h3 style="margin:20px 0 4px">Productos (${pr.length})</h3><p class="mt" style="margin-bottom:8px">El vendedor pone su precio. <b>Cargo extra</b>: lo que Nexora suma para el cliente (vacío = ${money(c.markup_default)} por defecto; productos menores de ${money(c.markup_min_price)} no llevan cargo).</p>
+ ${tbl(['','Producto','#Precio vendedor','Cargo extra $','#Cliente ve','Disponible',''],pr.map(p=>`<tr><td>${img(p.image_url,'📦')}</td><td>${esc(p.name)}<br><span class="mt">por ${esc(p.unit||'pieza')}</span></td><td class="n">${money(p.price)}</td><td class="n"><input type="number" min="0" step="0.5" style="width:84px;text-align:right;margin:0" value="${p.markup??''}" placeholder="${c.markup_default}" onchange="prodM('${p.id}',this,${p.price})"></td><td class="n" id="cp-${p.id}"><b>${money(custPrice(+p.price,p.markup,c))}</b></td><td><button class="tg ${p.available?'on':''}" onclick="prodA('${p.id}',this)"></button></td><td><button class="btn red s" onclick="prodD('${p.id}',this)">🗑</button></td></tr>`))}`}
+async function stSave(id){try{await api.storeSave(id,{name:$('sN').value.trim(),community:$('sC').value.trim(),description:$('sD').value.trim(),accepts_cash:$('sCash').checked,accepts_card:$('sCard').checked});toast('Guardado ✔');draw(true)}catch(e){toast(e.message,1)}}
+async function stFlag(id,p){try{await api.storeSave(id,p);toast('Listo ✔');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function stDel(id){if(!confirm('¿Eliminar esta tienda y todos sus productos? No se puede deshacer.'))return;try{await api.storeDel(id);toast('Tienda eliminada');closeModal();draw(true)}catch(e){toast('No se pudo eliminar (¿tiene pedidos?). Mejor pausa la tienda.',1)}}
+async function prodM(id,el,price){const v=el.value===''?null:Math.max(0,+el.value);try{await api.prodSave(id,{markup:v});$('cp-'+id).innerHTML=`<b>${money(custPrice(+price,v,S.cfg))}</b>`;toast('Cargo guardado ✔')}catch(e){toast(e.message,1)}}
+async function prodA(id,el){const on=!el.classList.contains('on');try{await api.prodSave(id,{available:on});el.classList.toggle('on',on)}catch(e){toast(e.message,1)}}
+async function prodD(id,el){if(!confirm('¿Eliminar este producto?'))return;try{await api.prodDel(id);el.closest('tr').remove();toast('Producto eliminado')}catch(e){toast('No se pudo eliminar (¿está en pedidos?). Mejor ponlo no disponible.',1)}}
+
+// ═══ USUARIOS ═══
+async function rUsers(){const all=await api.users(),q=S.uf.q.toLowerCase(),f=all.filter(u=>(S.uf.r==='all'||u.role===S.uf.r)&&(!q||u.full_name.toLowerCase().includes(q)||u.phone.includes(q)||String(u.public_id).includes(q)));S._us=all;
+ return `<div class="tb"><input id="uq" placeholder="🔎 Nombre, teléfono o ID" value="${esc(S.uf.q)}" oninput="S.uf.q=this.value;clearTimeout(window._t);window._t=setTimeout(()=>{draw(true);setTimeout(()=>{const i=$('uq');i.focus();i.setSelectionRange(99,99)},0)},350)">${[['all','Todos'],['client','Clientes'],['seller','Vendedores'],['driver','Repartidores'],['admin','Admins']].map(([k,l])=>`<span class="chip ${S.uf.r===k?'on':''}" onclick="S.uf.r='${k}';draw(true)">${l} · ${k==='all'?all.length:all.filter(u=>u.role===k).length}</span>`).join('')}</div>
+ ${tbl(['ID','Nombre','Teléfono','Rol','Comunidad','Registro',''],f.slice(0,300).map(u=>`<tr class="c" onclick="openUser('${u.id}')"><td><b>${pid(u.public_id)}</b></td><td>${esc(u.full_name)}</td><td>${esc(u.phone)}</td><td><span class="pill ${u.role==='admin'?'r':u.role==='client'?'g':''}">${ROLE[u.role]}</span></td><td>${esc(u.community||'—')}</td><td>${dt(u.created_at)}</td><td>${u.blocked?'<span class="pill r">Bloqueado</span>':''}</td></tr>`))}`}
+function openUser(id){const u=S._us.find(x=>x.id===id),me=u.id===S.me.id;if(!u)return;
+ openModal('Usuario '+pid(u.public_id),`<label class="f">Nombre completo</label><input id="uN" value="${esc(u.full_name)}"><label class="f">Teléfono (no se edita)</label><input value="${esc(u.phone)}" disabled>
+ <label class="f">Rol</label><select id="uR" onchange="$('uDw').classList.toggle('hide',this.value!=='driver')">${Object.entries(ROLE).map(([k,v])=>`<option value="${k}" ${u.role===k?'selected':''}>${v}</option>`).join('')}</select>
+ <div id="uDw" class="${u.role==='driver'?'':'hide'}"><label class="f">Estado de repartidor</label><select id="uDs">${Object.entries(DS).map(([k,v])=>`<option value="${k}" ${u.driver_status===k?'selected':''}>${v[0]}</option>`).join('')}</select></div>
+ <label class="f">Comunidad</label><input id="uC" value="${esc(u.community||'')}">
+ <p class="mt" style="margin-top:8px">ID ${pid(u.public_id)} (los IDs nunca se editan) · Registro ${dt(u.created_at)}</p>
+ <div class="acts"><button class="btn" onclick="uSave('${id}')">💾 Guardar</button>${me?'':`<button class="btn l" onclick="uBan('${id}',${!u.blocked})">${u.blocked?'🔓 Desbloquear':'🔒 Bloquear'}</button><button class="btn red" onclick="uDel('${id}')">🗑 Eliminar</button>`}${wa(u.phone)}</div>`)}
+async function uSave(id){try{await api.profile(id,{name:$('uN').value.trim(),role:$('uR').value,community:$('uC').value.trim(),ds:$('uR').value==='driver'?$('uDs').value:null});toast('Guardado ✔');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function uDel(id){if(!confirm('¿Eliminar esta cuenta para siempre?'))return;try{await api.delUser(id);toast('Cuenta eliminada');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+
+// ═══ ANUNCIOS ═══
+async function rAds(){const b=await api.banners();S._ad=b;return `<div class="tb"><p class="mt" style="flex:1">Lo que pongas aquí lo ven los clientes en la sección de ofertas y promociones. Sin comunidad = se ve en todas.</p><button class="btn" onclick="adEdit()">➕ Nuevo anuncio</button></div>
+ ${b.length?`<div class="g2">${b.map(x=>`<div class="card" style="display:flex;gap:12px">${img(x.image_url,'📣')}<div style="flex:1"><b>${esc(x.title)}</b> ${x.active?'':'<span class="pill g">Oculto</span>'}<br><span class="mt">${esc(x.body||'')}</span><br><span class="pill b" style="margin-top:6px">${esc(x.community||'Todas las comunidades')}</span></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn l s" onclick="adEdit('${x.id}')">✏️</button><button class="btn red s" onclick="adDel('${x.id}')">🗑</button></div></div>`).join('')}</div>`:'<div class="empty"><b>📣</b>Aún no hay anuncios</div>'}`}
+async function adEdit(id){const x=id?S._ad.find(b=>b.id===id):{title:'',body:'',community:'',active:true,image_url:''},coms=[...new Set((await api.stores()).map(s=>s.community))];S._img=x.image_url||null;
+ openModal(id?'Editar anuncio':'Nuevo anuncio',`<label class="f">Título</label><input id="aT" value="${esc(x.title)}" maxlength="60"><label class="f">Texto</label><textarea id="aB" rows="3" maxlength="240">${esc(x.body||'')}</textarea>
+ <label class="f">Comunidad</label><select id="aC"><option value="">Todas</option>${coms.map(c=>`<option ${x.community===c?'selected':''}>${esc(c)}</option>`).join('')}</select>
+ <label class="f">Imagen (opcional)</label><input type="file" id="aF" accept="image/*" onchange="adImg(this)"><div id="aP" style="margin-top:6px">${x.image_url?`<img src="${esc(x.image_url)}" style="max-width:100%;max-height:160px;border-radius:12px">`:''}</div>
+ <div class="acts"><label><input type="checkbox" id="aA" ${x.active?'checked':''}> Visible para los clientes</label></div><div class="acts"><button class="btn" id="aS" onclick="adSave('${id||''}')">💾 Guardar</button></div>`)}
+async function adImg(el){if(!el.files[0])return;try{$('aS').disabled=true;S._img=await api.upload(el.files[0]);$('aP').innerHTML=`<img src="${esc(S._img)}" style="max-width:100%;max-height:160px;border-radius:12px">`}catch(e){toast('No se pudo subir la imagen: '+e.message,1)}$('aS').disabled=false}
+async function adSave(id){const t=$('aT').value.trim();if(!t)return toast('Pon un título',1);const b={title:t,body:$('aB').value.trim(),community:$('aC').value||null,image_url:S._img||null,active:$('aA').checked};if(id)b.id=id;try{await api.bannerSave(b);toast('Anuncio guardado ✔');closeModal();draw(true)}catch(e){toast(e.message,1)}}
+async function adDel(id){if(!confirm('¿Borrar este anuncio?'))return;try{await api.bannerDel(id);toast('Borrado');draw(true)}catch(e){toast(e.message,1)}}
+
+// ═══ MAPA EN VIVO ═══
+let MAPI=null;
+async function rMap(){return `<div class="tb"><span class="pill b">🛵 Repartidores en línea</span><span class="pill y">🏪 Tiendas</span><span class="pill">📦 Entregas en curso</span><span class="mt">Se actualiza solo cada 30 s</span></div><div id="map"></div><p class="mt" id="mapInfo" style="margin-top:8px"></p>`}
+V.map.after=async()=>{const[drs,sts,ord]=await Promise.all([api.drivers(),api.stores(),api.orders()]);if(!$('map'))return;
+ if(!window.L){$('map').innerHTML='<div class="empty"><b>🗺️</b>El mapa necesita internet para cargar (Leaflet / OpenStreetMap).</div>';return}
+ if(MAPI){MAPI.remove();MAPI=null}MAPI=L.map('map').setView([19.93,-97.64],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(MAPI);
+ const ic=(t,c)=>L.divIcon({html:`<div class="mk" style="background:${c}">${t}</div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]}),pts=[];
+ const on=drs.filter(d=>d.online&&d.last_lat!=null&&!d.blocked);on.forEach(d=>{L.marker([d.last_lat,d.last_lng],{icon:ic('🛵','#2f7bff')}).addTo(MAPI).bindPopup(`<b>${pid(d.public_id)} · ${esc(d.full_name)}</b><br>Visto ${dt(d.last_seen)}`);pts.push([d.last_lat,d.last_lng])});
+ sts.filter(s=>s.lat!=null&&s.approved&&s.active).forEach(s=>{L.marker([s.lat,s.lng],{icon:ic('🏪','#ff7a1a')}).addTo(MAPI).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.community)}`);pts.push([s.lat,s.lng])});
+ const act=ord.filter(o=>['new','accepted','picked'].includes(o.status)&&o.lat!=null);act.forEach(o=>{L.marker([o.lat,o.lng],{icon:ic('📦','#0fb85c')}).addTo(MAPI).bindPopup(`<b>Pedido #${o.public_no}</b><br>${esc(o.client?.full_name)}<br>${stPill(o.status)}`);pts.push([o.lat,o.lng])});
+ if(pts.length)MAPI.fitBounds(pts,{padding:[40,40],maxZoom:15});setTimeout(()=>MAPI&&MAPI.invalidateSize(),200);$('mapInfo').textContent=`${on.length} repartidores en línea · ${act.length} entregas en curso · ${sts.filter(s=>s.approved&&s.active).length} tiendas activas`};
+
+// ═══ CHATS (solo lectura, para supervisar) ═══
+async function rChats(){const ms=await api.messages(),g={};ms.forEach(m=>{(g[m.order_id]=g[m.order_id]||[]).push(m)});const ids=Object.keys(g);S._ch=g;if(!S.chatId||!g[S.chatId])S.chatId=ids[0]||null;
+ return ids.length?`<div class="chat"><div class="card lst">${ids.map(i=>{const l=g[i][0];return `<div class="li ${i===S.chatId?'on':''}" onclick="S.chatId='${i}';draw(true)"><b>Pedido #${l.order?.public_no}</b> ${stPill(l.order?.status)}<br><span class="mt">${esc(l.body.slice(0,40))}</span></div>`}).join('')}</div>
+ <div class="card"><h3>Pedido #${g[S.chatId][0].order?.public_no}<small>Solo lectura</small></h3>${[...g[S.chatId]].reverse().map(m=>`<div class="bub ${m.sender?.role==='driver'?'dr':''}"><small>${esc(m.sender?.full_name)} (${ROLE[m.sender?.role]||''}) · ${dt(m.created_at)}</small>${esc(m.body)}</div>`).join('')}</div></div>`:'<div class="empty"><b>💬</b>Todavía no hay conversaciones entre clientes y repartidores.</div>'}
+
+// ═══ AJUSTES ═══
+const tg=(k,on)=>`<button class="tg ${on?'on':''}" data-k="${k}" data-t="b" onclick="this.classList.toggle('on')"></button>`;
+const nf=(k,v,u,st)=>`<input type="number" data-k="${k}" data-t="n" value="${v}" min="0" step="${st||1}">${u||''}`;
+const row=(b,s,c)=>`<div class="sr"><div><b>${b}</b>${s?`<small>${s}</small>`:''}</div>${c}</div>`;
+async function rSettings(){const c=S.cfg=await api.settings(),m=c.delivery_mode,rp=c.ref_point||{};
+ return `<div class="g2">
+ <div class="card" id="c1"><h3>💰 Cobro extra por producto</h3><p class="mt">El vendedor pone su precio y el cliente ve un poco más. Esa diferencia es ganancia de Nexora (la guarda el repartidor y luego la deposita). Puedes cambiarla producto por producto en <a href="#stores" onclick="go('stores');return false" style="color:var(--g2);font-weight:700">Tiendas</a>.</p>
+  ${row('Cargo por defecto','Pesos extra por cada producto',nf('markup_default',c.markup_default,'',0.5))}${row('Sin cargo si cuesta menos de','Ej. un dulce de $2 se muestra a $2',nf('markup_min_price',c.markup_min_price))}
+  <div class="note">Ejemplo: jitomate del vendedor $15 → el cliente ve <b>${money(custPrice(15,null,c))}</b>.</div><button class="btn" onclick="saveCard('c1')">💾 Guardar</button></div>
+ <div class="card" id="c2"><h3>💳 Tarjeta (Stripe)</h3>${row('Permitir pagos con tarjeta','Apagado: los vendedores solo cobran en efectivo. Enciéndelo cuando tengas Stripe listo.',tg('card_enabled',c.card_enabled))}<div class="note ${c.card_enabled?'ok':''}" id="cardNote">${c.card_enabled?'✅ Tarjeta ACTIVADA':'🔒 Tarjeta desactivada por ahora (como lo pediste)'}</div><button class="btn" onclick="saveCard('c2')">💾 Guardar</button></div>
+ <div class="card" id="c3" style="grid-column:1/-1"><h3>🛣️ Cobro del envío (por calles)</h3><p class="mt">El repartidor cobra según la distancia por las calles, no en línea recta. Elige cómo se calcula:</p>
+  <div class="acts" style="margin:10px 0">${[['per_km','Por kilómetro'],['tiered','Más lejos, más barato'],['reference','Por punto de referencia']].map(([k,l])=>`<span class="chip ${m===k?'on':''}" data-m="${k}" onclick="setMode('${k}')">${l}</span>`).join('')}</div>
+  ${row('Envío mínimo','Nunca se cobra menos que esto',nf('delivery_min',c.delivery_min,' $'))}
+  <div id="mp-per_km" class="${m==='per_km'?'':'hide'}">${row('Precio por kilómetro','',nf('delivery_per_km',c.delivery_per_km,' $'))}</div>
+  <div id="mp-tiered" class="${m==='tiered'?'':'hide'}"><p class="mt" style="margin-top:8px">Cada tramo cobra su propio precio por km (los primeros km son más caros, los lejanos más baratos).</p><div id="tiers">${c.delivery_tiers.map(tierRow).join('')}</div><button class="btn l s" onclick="$('tiers').insertAdjacentHTML('beforeend',tierRow({upto:20,per_km:10}))">➕ Agregar tramo</button></div>
+  <div id="mp-reference" class="${m==='reference'?'':'hide'}"><p class="mt" style="margin-top:8px">Mide una distancia de ejemplo y ponle precio. Todo lo demás se calcula proporcional. ${window.L?'Toca el mapa para marcar el punto A y luego el B.':''}</p>
+   ${window.L?'<div id="mapRef"></div>':''}<div class="ms" style="grid-template-columns:1fr 1fr"><div><label class="f">Distancia por calles (km)</label><input type="number" id="rpKm" step="0.1" min="0" value="${rp.km??''}"></div><div><label class="f">Cobrar por esa distancia ($)</label><input type="number" id="rpPr" step="1" min="0" value="${rp.price??''}"></div></div><p class="mt" id="rpInfo"></p></div>
+  <div class="note" style="margin-top:12px"><b>🧮 Simulador</b> — ¿cuánto cobraría con cada forma?<div class="acts" style="margin-top:6px;align-items:center"><input type="number" id="simKm" value="4" min="0" step="0.5" style="width:90px;margin:0" oninput="sim()"> km → <span id="simOut"></span></div></div>
+  <button class="btn" onclick="saveCard('c3')">💾 Guardar envío</button></div>
+ <div class="card" id="c4"><h3>🏦 Ganancia de Nexora en el envío</h3>${row('Porcentaje del envío','Se descuenta de lo que gana el repartidor. Al repartidor se le pide depositar “lo de la plataforma”, sin mencionar comisión.',nf('platform_pct',c.platform_pct,' %'))}<button class="btn" onclick="saveCard('c4')">💾 Guardar</button></div>
+ <div class="card" id="c5"><h3>🛵 Reglas de repartidores</h3>
+  ${row('Radio para ver solicitudes','Km desde donde está el repartidor',nf('driver_radius_km',c.driver_radius_km,' km'))}${row('Pedidos activos a la vez','',nf('driver_max_active',c.driver_max_active))}${row('Límite de deuda','Si debe más, no puede aceptar pedidos',nf('debt_limit',c.debt_limit,' $'))}${row('Hora de corte de la jornada','Después de esta hora (madrugada) el dinero del día anterior ya es “vencido”',nf('settle_cutoff_hour',c.settle_cutoff_hour,' h'))}
+  ${row('Contar depósitos “en revisión”','Si está encendido, el repartidor puede seguir trabajando mientras confirmas su depósito',tg('trust_pending',c.trust_pending))}${row('Aprobar repartidores automáticamente','Apagado = tú revisas su INE y rostro',tg('auto_approve_drivers',c.auto_approve_drivers))}${row('Confirmar depósitos automáticamente','Solo para pruebas',tg('auto_confirm_settlements',c.auto_confirm_settlements))}<button class="btn" onclick="saveCard('c5')">💾 Guardar</button></div>
+ <div class="card" id="c6"><h3>🏪 Tiendas y soporte</h3>${row('Aprobar tiendas automáticamente','Apagado = apareces en “por aprobar”',tg('auto_approve_stores',c.auto_approve_stores))}
+  ${row('WhatsApp de soporte','Con lada, ej. 522311234567',`<input data-k="support_phone" data-t="s" value="${esc(c.support_phone||'')}" style="width:170px" inputmode="numeric">`)}<button class="btn" onclick="saveCard('c6')">💾 Guardar</button></div>
+ <div class="card" id="c7" style="grid-column:1/-1"><h3>🏦 Formas en que el repartidor te deposita</h3><p class="mt">Lo más fácil posible: transferencia, tienda de conveniencia, QR, banco…</p><div id="pays">${(c.pay_methods||[]).map(payRow).join('')}</div>
+  <div class="acts"><button class="btn l s" onclick="$('pays').insertAdjacentHTML('beforeend',payRow({type:'transfer',label:'',detail:'',image:''}))">➕ Agregar forma de pago</button><button class="btn" onclick="saveCard('c7')">💾 Guardar</button></div></div></div>`}
+const tierRow=t=>`<div class="ms" data-tier><div><label class="f">Hasta (km)</label><input type="number" data-tu value="${t.upto}" min="0.5" step="0.5"></div><div><label class="f">Precio por km ($)</label><input type="number" data-tp value="${t.per_km}" min="0" step="1"></div><button class="btn red s" onclick="this.closest('[data-tier]').remove()" style="margin-top:18px">✕</button></div>`;
+const payRow=p=>`<div class="pay" data-pay><select data-pt>${[['transfer','Transferencia'],['oxxo','Tienda'],['bank','Banco'],['qr','QR']].map(([k,l])=>`<option value="${k}" ${p.type===k?'selected':''}>${l}</option>`).join('')}</select><input data-pl placeholder="Nombre (ej. Transferencia)" value="${esc(p.label)}"><input data-pd placeholder="CLABE / tarjeta / datos" value="${esc(p.detail||'')}"><button class="btn red s" onclick="this.closest('[data-pay]').remove()">✕</button><input data-pi placeholder="URL de la imagen del QR (opcional)" value="${esc(p.image||'')}" style="grid-column:1/-1"></div>`;
+function curMode(){const e=document.querySelector('[data-m].on');return e?e.dataset.m:'per_km'}
+function setMode(k){document.querySelectorAll('[data-m]').forEach(e=>e.classList.toggle('on',e.dataset.m===k));['per_km','tiered','reference'].forEach(x=>$('mp-'+x).classList.toggle('hide',x!==k));if(k==='reference')setTimeout(initRef,50);sim()}
+function readDel(){const g=k=>{const e=document.querySelector(`#c3 [data-k="${k}"]`);return e?+e.value:0},t=[...document.querySelectorAll('[data-tier]')].map(r=>({upto:+r.querySelector('[data-tu]').value,per_km:+r.querySelector('[data-tp]').value})).filter(x=>x.upto>0).sort((a,b)=>a.upto-b.upto);
+ if(t.length&&t[t.length-1].upto<999)t.push({upto:999,per_km:t[t.length-1].per_km});
+ const rp=S._rp||{};return{delivery_mode:curMode(),delivery_min:g('delivery_min'),delivery_per_km:g('delivery_per_km'),delivery_tiers:t.length?t:S.cfg.delivery_tiers,ref_point:{lat:rp.lat??null,lng:rp.lng??null,lat2:rp.lat2??null,lng2:rp.lng2??null,km:+$('rpKm').value||null,price:+$('rpPr').value||null}}}
+function sim(){if(!$('simOut'))return;const d=readDel(),k=+$('simKm').value||0,c={...S.cfg,...d};$('simOut').innerHTML=[['per_km','Por km'],['tiered','Escalonado'],['reference','Referencia']].map(([m,l])=>`<span class="pill ${m===d.delivery_mode?'':'g'}">${l}: <b>${money(feeFor(k,c,m))}</b></span>`).join(' ');
+ const rk=+$('rpKm').value,rpr=+$('rpPr').value;if($('rpInfo'))$('rpInfo').textContent=rk>0&&rpr>0?`Eso equivale a ${money(rpr/rk)} por km.`:'Aún sin punto de referencia: mientras tanto se usa el precio por km.'}
+V.settings.after=()=>{document.querySelectorAll('#c3 input').forEach(i=>i.addEventListener('input',sim));S._rp={...(S.cfg.ref_point||{})};sim();if(curMode()==='reference')initRef()};
+let RMAP=null,RPT=[];
+async function routeKm(a,b){try{const r=await fetch(`${N.ROUTE_API}?inicio=${a[1]},${a[0]}&fin=${b[1]},${b[0]}`),d=await r.json(),f=d.features[0],pr=f.properties||{};let m=pr.summary?.distance;if(!(m>0))m=(pr.segments||[]).reduce((x,s)=>x+(s.distance||0),0);if(m>0)return{km:m/1000,street:true,coords:f.geometry.coordinates.map(c=>[c[1],c[0]])}}catch(e){}return{km:hav(a[0],a[1],b[0],b[1])*1.3,street:false,coords:[a,b]}}
+function initRef(){if(!window.L||!$('mapRef'))return;if(RMAP){RMAP.remove();RMAP=null}const r=S._rp||{},c=(r.lat!=null)?[r.lat,r.lng]:[19.93,-97.64];RMAP=L.map('mapRef').setView(c,12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(RMAP);let lay=L.layerGroup().addTo(RMAP);RPT=[];
+ if(r.lat!=null&&r.lat2!=null){RPT=[[r.lat,r.lng],[r.lat2,r.lng2]];RPT.forEach((p,i)=>L.marker(p).addTo(lay).bindPopup(i?'B':'A'))}
+ RMAP.on('click',async e=>{if(RPT.length>=2){RPT=[];lay.clearLayers()}RPT.push([e.latlng.lat,e.latlng.lng]);L.marker(e.latlng).addTo(lay).bindPopup(RPT.length==1?'A':'B');
+  if(RPT.length===2){const x=await routeKm(RPT[0],RPT[1]);L.polyline(x.coords,{color:'#0fb85c',weight:5,dashArray:x.street?null:'8,8'}).addTo(lay);$('rpKm').value=x.km.toFixed(1);S._rp={...S._rp,lat:RPT[0][0],lng:RPT[0][1],lat2:RPT[1][0],lng2:RPT[1][1]};if(!x.street)toast('No se pudo medir por calles; se estimó en línea recta ×1.3',1);sim()}});
+ setTimeout(()=>RMAP&&RMAP.invalidateSize(),250)}
+async function saveCard(id){const el=$(id);let o={};
+ if(id==='c3'){o=readDel()}
+ else if(id==='c7'){o.pay_methods=[...document.querySelectorAll('[data-pay]')].map(r=>({type:r.querySelector('[data-pt]').value,label:r.querySelector('[data-pl]').value.trim(),detail:r.querySelector('[data-pd]').value.trim(),image:r.querySelector('[data-pi]').value.trim()||undefined})).filter(p=>p.label||p.detail)}
+ else el.querySelectorAll('[data-k]').forEach(e=>{const t=e.dataset.t;o[e.dataset.k]=t==='b'?e.classList.contains('on'):t==='n'?(+e.value||0):e.value.trim()});
+ if(id==='c2'&&o.card_enabled&&!confirm('¿Activar los pagos con tarjeta? Asegúrate de que Stripe ya esté configurado.'))return;
+ if(id==='c3'&&o.delivery_mode==='reference'&&!(o.ref_point.km>0&&o.ref_point.price>0)&&!confirm('No pusiste distancia y precio de referencia; se usará el precio por km. ¿Guardar así?'))return;
+ try{await api.saveSettings(o);Object.assign(S.cfg,o);toast('Ajustes guardados ✔');if(id==='c2')$('cardNote').outerHTML=`<div class="note ${o.card_enabled?'ok':''}" id="cardNote">${o.card_enabled?'✅ Tarjeta ACTIVADA':'🔒 Tarjeta desactivada por ahora'}</div>`}catch(e){toast(e.message,1)}}
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(S.me&&V[h]&&h!==S.view)go(h)});
+</script><div id="nxMode" style="display:none;position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:99999;background:#ffc233;color:#3a2e00;font:700 12px system-ui;padding:5px 14px;border-radius:20px;box-shadow:0 2px 10px #0004;pointer-events:none;white-space:nowrap"></div>
+<script>(function(){var e=document.getElementById('nxMode'),N=window.NEXORA||{},live=!!(N.SUPABASE_URL&&N.SUPABASE_ANON_KEY);
+function t(){var m='';if(!live)m='⚠️ MODO EJEMPLO · datos falsos, no se guarda nada';else try{if(String(S.me.phone||'').indexOf('555000000')===0)m='🧪 CUENTA DE PRUEBA'}catch(x){}
+e.textContent=m;e.style.display=m?'block':'none'}t();setInterval(t,1500)})()</script>
+</body></html>
