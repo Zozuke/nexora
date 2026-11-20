@@ -62,6 +62,7 @@ input,textarea{width:100%;padding:15px;border:2px solid #dbe7df;border-radius:14
  <div id="phBox"><input id="phone" type="tel" inputmode="numeric" placeholder="Número de teléfono (10 dígitos)" autocomplete="tel"></div>
  <input id="pin" type="password" placeholder="Contraseña (mínimo 6 caracteres)">
  <div class="err" id="err"></div><button class="btn" id="authBtn" onclick="auth()">Continuar</button>
+ <div id="forgot" style="display:none;text-align:center;margin-top:10px"><a href="#" onclick="forgot();return false" style="color:inherit;font-size:14px;text-decoration:underline">¿Olvidaste tu contraseña?</a></div>
  <button class="btn l" onclick="go('welcome')">Atrás</button>
 </div></section>
 
@@ -133,8 +134,23 @@ const api={
 function go(id,m){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));$('s-'+id).classList.add('on');scrollTo(0,0);if(m)mode(m);$('nav').style.display=id==='home'?'flex':'none';if(id==='home')clearInterval(poll),poll=setInterval(loadOrders,20000)}
 const SL=[['Vende a toda tu comunidad','Tus clientes te encuentran en Nexora y piden desde su casa.'],['Publica en minutos','Sube fotos y precios de lo que vendes, para cualquier tipo de negocio.'],['Nosotros llevamos el pedido','Un repartidor pasa por tus productos y tú sabes quién es.']];let si=0;
 function slide(){$('sl').innerHTML=`<h2>${SL[si][0]}</h2><p>${SL[si][1]}</p>`;$('dots').innerHTML=SL.map((_,i)=>`<i class="${i===si?'on':''}"></i>`).join('');si=(si+1)%SL.length}slide();setInterval(slide,3500);
-let M='reg';function mode(m){M=m;$('nameBox').style.display=m==='reg'?'block':'none';$('phBox').style.display=m==='reg'?'block':'none';$('tReg').className=m==='reg'?'on':'';$('tLog').className=m==='log'?'on':'';$('err').textContent=''}
+let M='reg';function mode(m){M=m;$('forgot').style.display=m==='log'?'block':'none';$('err').style.color='';$('nameBox').style.display=m==='reg'?'block':'none';$('phBox').style.display=m==='reg'?'block':'none';$('tReg').className=m==='reg'?'on':'';$('tLog').className=m==='log'?'on':'';$('err').textContent=''}
 // ---------- cuenta ----------
+// ---------- recuperar contraseña ----------
+async function forgot(){const em=$('email').value.trim().toLowerCase();$('err').style.color='';$('err').textContent='';
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return $('err').textContent='Escribe tu correo arriba y vuelve a tocar "¿Olvidaste tu contraseña?"';
+ if(em.endsWith('@nexora.app'))return $('err').textContent='Esa cuenta se creó solo con teléfono y no tiene un correo real. Pide ayuda a soporte.';
+ if(!live)return $('err').textContent='Falta conectar Supabase en config.js';
+ const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});
+ if(r.error)return $('err').textContent=/rate|seconds|limit/i.test(r.error.message)?'Espera un minuto e inténtalo de nuevo':'No se pudo enviar el correo. Inténtalo más tarde';
+ $('err').style.color='#16a34a';$('err').textContent='Listo. Si ese correo tiene cuenta, te enviamos un enlace para crear una contraseña nueva. Revisa también spam.'}
+function showReset(){if($('rsBox'))return;const d=document.createElement('div');d.id='rsBox';d.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
+ d.innerHTML='<div style="background:#fff;color:#111;border-radius:16px;padding:20px;width:100%;max-width:380px"><h2 style="margin:0 0 6px">Nueva contraseña</h2><p style="margin:0 0 12px;font-size:14px">Escribe tu nueva contraseña (mínimo 6 caracteres).</p><input id="rsPw" type="password" placeholder="Nueva contraseña" style="width:100%;box-sizing:border-box;padding:12px;font-size:16px;border:1px solid #ccc;border-radius:10px"><div id="rsErr" style="color:#c00;font-size:13px;min-height:18px;margin:6px 0"></div><button class="btn" id="rsBtn" onclick="saveReset()">Guardar contraseña</button></div>';document.body.appendChild(d)}
+async function saveReset(){const pw=$('rsPw').value;$('rsErr').textContent='';if(pw.length<6)return $('rsErr').textContent='Mínimo 6 caracteres';
+ $('rsBtn').disabled=true;const r=await sb.auth.updateUser({password:pw});$('rsBtn').disabled=false;
+ if(r.error)return $('rsErr').textContent=/expired|session|missing/i.test(r.error.message)?'El enlace venció. Pide uno nuevo':'No se pudo guardar. Inténtalo de nuevo';
+ $('rsBox').remove();history.replaceState(null,'',location.pathname);await boot()}
+if(live)sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
 async function auth(){const ph=$('phone').value.replace(/\D/g,''),pw=$('pin').value,nm=$('name').value.trim();$('err').textContent='';
  const em=$('email').value.trim().toLowerCase();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return $('err').textContent='Escribe un correo electrónico válido';

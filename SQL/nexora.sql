@@ -85,9 +85,10 @@ create table if not exists settlements(
 create or replace function is_admin() returns bool language sql stable security definer set search_path=public as $$
  select exists(select 1 from profiles where id=auth.uid() and role='admin') $$;
 
-create or replace function customer_price(p numeric, m numeric) returns numeric language sql stable as $$
- select case when p < (select (value)::numeric from settings where key='markup_min_price') then p
- else p + coalesce(m,(select (value)::numeric from settings where key='markup_default')) end $$;
+-- security definer: el cliente no puede leer 'settings' (solo admin), sin esto el precio salía NULL ($0)
+create or replace function customer_price(p numeric, m numeric) returns numeric language sql stable security definer set search_path=public as $$
+ select case when p < coalesce((select (value #>> '{}')::numeric from settings where key='markup_min_price'),5) then p
+ else p + coalesce(m,(select (value #>> '{}')::numeric from settings where key='markup_default'),2) end $$;
 
 create or replace function handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$
 declare v_role text := case when new.raw_user_meta_data->>'role' in('seller','driver') then new.raw_user_meta_data->>'role' else 'client' end;

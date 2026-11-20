@@ -1,4 +1,6 @@
-# Nexora v7
+# Nexora v7.1
+
+v7.1: (1) precio del cliente ya no sale en $0 (customer_price ahora es security definer; volver a pegar el SQL). (2) "¿Olvidaste tu contraseña?" en App1, App2 y App3: manda un enlace al correo. En Supabase > Authentication > URL Configuration agrega la dirección de cada app en "Redirect URLs" y en "Site URL" la principal. Las cuentas viejas con correo telefono@nexora.app no reciben correos.
 
 Cambios v7: registro con CORREO + TELÉFONO (se entra con correo y contraseña) y ruta del repartidor en cartas apiladas (un paso a la vez). Hay que volver a pegar el SQL.
 - Las cuentas anteriores (telefono@nexora.app) siguen entrando escribiendo ese correo.
